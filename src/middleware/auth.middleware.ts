@@ -62,17 +62,17 @@ export const authMiddleware = {
    */
   requireGuest: async () => {
     const authed = await tryRefresh()
-    if (authed) throw redirect({ to: '/dashboard' })
+    if (authed) throw redirect({ to: '/setup' })
   },
 
   /**
    * `smartRedirect` — Use in `beforeLoad` of the index route ( / ).
    *
-   * Authenticated (or valid cookie) → /dashboard
+   * Authenticated (or valid cookie) → /setup (orchestration)
    * Guest                           → /login
    */
   smartRedirect: async () => {
     const authed = await tryRefresh()
-    throw redirect({ to: authed ? '/dashboard' : '/login' })
+    throw redirect({ to: authed ? '/setup' : '/login' })
   },
 }

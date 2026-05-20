@@ -59,9 +59,9 @@ const statusConfig: Record<
 
 function BillingPage() {
   const { activeWorkspace } = useWorkspaceStore();
-  const { data: invoices, isLoading } = useInvoices(activeWorkspace?.id);
-  const { data: subscription } = useSubscription(activeWorkspace?.id);
-  const payMutation = usePayInvoice(activeWorkspace?.id);
+  const { data: invoices, isLoading } = useInvoices(activeWorkspace?.entity_id);
+  const { data: subscription } = useSubscription(activeWorkspace?.entity_id);
+  const payMutation = usePayInvoice(activeWorkspace?.entity_id);
 
   if (isLoading) {
     return (

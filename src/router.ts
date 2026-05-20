@@ -6,6 +6,8 @@ import { registerRoute } from './routes/register'
 import { forgotPasswordRoute } from './routes/forgot-password'
 import { verifyEmailRoute } from './routes/verify-email'
 import { verifyWhatsappRoute } from './routes/verify-whatsapp'
+import { setupRoute } from './routes/setup'
+import { workspacesRoute } from './routes/workspaces'
 import { authedLayout } from './routes/_authed'
 import { dashboardRoute } from './routes/dashboard'
 import { uiOverviewRoute } from './routes/ui-overview'
@@ -23,6 +25,8 @@ const routeTree = rootRoute.addChildren([
   forgotPasswordRoute,
   verifyEmailRoute,
   verifyWhatsappRoute,
+  setupRoute,
+  workspacesRoute,
 
   // Protected routes — wrapped in authed layout (auth guard + sidebar/header)
   authedLayout.addChildren([

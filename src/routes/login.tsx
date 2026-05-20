@@ -164,7 +164,7 @@ function LoginPage() {
       { email, password },
       {
         onSuccess: () => {
-          navigate({ to: "/dashboard" });
+          navigate({ to: "/setup" });
         },
       },
     );
@@ -189,7 +189,7 @@ function LoginPage() {
       { whatsapp: savedWhatsapp, otp },
       {
         onSuccess: () => {
-          navigate({ to: "/dashboard" });
+          navigate({ to: "/setup" });
         },
       },
     );

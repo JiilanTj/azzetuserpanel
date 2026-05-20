@@ -28,9 +28,9 @@ export const dashboardRoute = createRoute({
 function DashboardPage() {
   const { activeWorkspace } = useWorkspaceStore();
   const { data: user } = useMe();
-  const { data: subscription } = useSubscription(activeWorkspace?.id);
-  const { data: invoices } = useInvoices(activeWorkspace?.id);
-  const { data: members } = useMembers(activeWorkspace?.id);
+  const { data: subscription } = useSubscription(activeWorkspace?.entity_id);
+  const { data: invoices } = useInvoices(activeWorkspace?.entity_id);
+  const { data: members } = useMembers(activeWorkspace?.entity_id);
   const { data: workspaces } = useWorkspaces();
 
   const pendingInvoices =

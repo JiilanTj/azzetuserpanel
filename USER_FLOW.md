@@ -401,18 +401,17 @@ Set-Cookie: refresh_token=new-eyJ...; (rotated)
 
 ## Flow 6: First Time Setup (Post-Registration)
 
-> After registration + verification + first login, the system automatically creates:
+> After registration + verification + first login, the system has already created:
 > 1. Personal entity (ORANG_PRIBADI)
 > 2. Personal workspace
 >
-> This happens via event system (async), usually within 1-2 seconds.
+> This happens synchronously during registration — no delay, no polling needed.
 
 **Frontend should:**
 
 1. After first login, call `GET /api/v1/workspaces`
-2. If empty (event not processed yet), show loading/onboarding screen
-3. Poll every 2 seconds until workspace appears
-4. Once workspace exists, proceed to plan selection
+2. Workspace will already be there (created during registration)
+3. Auto-select the workspace and proceed to plan selection
 
 **Request:**
 ```http
@@ -440,7 +439,7 @@ Authorization: Bearer <access_token>
 **Frontend Action:**
 - Store `entity_id` as default workspace
 - Set `X-Workspace-ID` header for subsequent requests
-- Redirect to plan selection page (`/plans`)
+- Check subscription → if none, redirect to plan selection page (`/plans/select`)
 
 ---
 
@@ -875,6 +874,326 @@ Content-Type: application/json
 
 ---
 
+## Page Routing Logic (Frontend Guard)
+
+> This section defines the routing/redirect logic for the frontend.
+> Use this as the basis for route guards, middleware, or layout wrappers.
+
+### Decision Tree (On Every Page Load)
+
+```
+User opens any page
+    │
+    ├── Has access_token in memory?
+    │   ├── NO → Redirect to /login (except public pages)
+    │   └── YES ↓
+    │
+    ├── Token expired?
+    │   ├── YES → Try refresh (POST /auth/refresh)
+    │   │         ├── Success → continue
+    │   │         └── Fail → clear state, redirect to /login
+    │   └── NO ↓
+    │
+    ├── GET /api/v1/workspaces → has workspaces?
+    │   ├── NO (empty array) → should not happen (created during registration)
+    │   │   └── Redirect to /workspaces/new (manual creation as fallback)
+    │   └── YES ↓
+    │
+    ├── Has X-Workspace-ID selected?
+    │   ├── NO → auto-select first workspace (or show picker if multiple)
+    │   └── YES ↓
+    │
+    ├── GET /api/v1/subscription → has active subscription?
+    │   ├── NO (404 or status=expired/cancelled)
+    │   │   └── Redirect to /plans/select (plan selection page)
+    │   └── YES (status=active or status=trial) ↓
+    │
+    ├── If trial: is trial expiring soon? (< 3 days)
+    │   └── Show banner: "Trial expires in X days. Upgrade now."
+    │
+    └── ALLOW ACCESS to workspace features
+```
+User opens any page
+    │
+    ├── Has access_token in memory?
+    │   ├── NO → Redirect to /login (except public pages)
+    │   └── YES ↓
+    │
+    ├── Token expired?
+    │   ├── YES → Try refresh (POST /auth/refresh)
+    │   │         ├── Success → continue
+    │   │         └── Fail → clear state, redirect to /login
+    │   └── NO ↓
+    │
+    ├── GET /api/v1/workspaces → has workspaces?
+    │   ├── NO (empty array) → entity not created yet
+    │   │   └── Show loading screen, poll every 2s
+    │   │       (event system creating entity + workspace)
+    │   │       └── Once workspace appears → continue ↓
+    │   └── YES ↓
+    │
+    ├── Has X-Workspace-ID selected?
+    │   ├── NO → Redirect to /workspaces (workspace picker)
+    │   └── YES ↓
+    │
+    ├── GET /api/v1/subscription → has active subscription?
+    │   ├── NO (404 or status=expired/cancelled)
+    │   │   └── Redirect to /plans (plan selection page)
+    │   └── YES (status=active or status=trial) ↓
+    │
+    ├── If trial: is trial expiring soon? (< 3 days)
+    │   └── Show banner: "Trial expires in X days. Upgrade now."
+    │
+    └── ALLOW ACCESS to workspace features
+```
+
+---
+
+### Page-by-Page Routing Rules
+
+#### Public Pages (No Auth Required)
+
+| Page | Path | Condition |
+|------|------|-----------|
+| Landing | `/` | Always accessible |
+| Login | `/login` | If already logged in → redirect to `/dashboard` |
+| Register | `/register` | If already logged in → redirect to `/dashboard` |
+| Verify Email | `/verify-email` | Accessible after registration |
+| Verify WhatsApp | `/verify-whatsapp` | Accessible after registration |
+| Forgot Password | `/forgot-password` | Always accessible |
+| Reset Password | `/reset-password` | Always accessible |
+| Pricing | `/plans` | Always accessible (public plan list) |
+
+#### Authenticated Pages (Requires Access Token)
+
+| Page | Path | Guard Logic |
+|------|------|-------------|
+| Dashboard | `/dashboard` | Requires workspace + subscription |
+| Workspace Picker | `/workspaces` | Shows all workspaces, user picks one |
+| Create Workspace | `/workspaces/new` | User creates business entity + workspace |
+| Plan Selection | `/plans/select` | Shown when workspace has no subscription |
+| Payment | `/billing/pay` | Shown when paid plan selected |
+
+#### Workspace-Scoped Pages (Requires X-Workspace-ID + Active Subscription)
+
+| Page | Path | Guard Logic |
+|------|------|-------------|
+| Dashboard | `/dashboard` | Main workspace view |
+| Members | `/workspace/members` | Requires PEMILIK role |
+| Counterparties | `/workspace/counterparties` | Any workspace member |
+| Billing | `/workspace/billing` | Requires PEMILIK role |
+| Settings | `/workspace/settings` | Requires PEMILIK role |
+| Subscription | `/workspace/subscription` | Requires PEMILIK role |
+
+---
+
+### Detailed Guard Logic Per Scenario
+
+#### Scenario 1: Brand New User (Just Registered)
+
+```
+1. User registers → status = UNVERIFIED
+2. Redirect to /verify-email or /verify-whatsapp
+3. User verifies OTP → status = ACTIVE
+4. Redirect to /login
+5. User logs in → access_token received
+6. GET /workspaces → workspace already exists (created during registration)
+7. Auto-select workspace → store entity_id as X-Workspace-ID
+8. GET /subscription → 404 (no subscription yet)
+9. Redirect to /plans/select
+10. User picks Free plan → POST /subscription
+11. Subscription active → redirect to /dashboard
+12. User can now use features!
+```
+
+#### Scenario 2: Returning User (Has Everything Set Up)
+
+```
+1. User opens app → has access_token in memory? 
+   - If page refresh: token gone → try refresh cookie
+   - POST /auth/refresh → new access_token
+2. GET /workspaces → has workspaces ✓
+3. Last used workspace stored in localStorage (just the ID)
+4. Set X-Workspace-ID header
+5. GET /subscription → active ✓
+6. Show dashboard directly
+```
+
+#### Scenario 3: User with Expired Trial
+
+```
+1. User logs in → access_token received
+2. GET /workspaces → has workspace ✓
+3. Set X-Workspace-ID
+4. GET /subscription → status = "expired" (trial ended)
+5. Redirect to /plans/select
+6. Show message: "Your trial has ended. Choose a plan to continue."
+7. User picks paid plan → POST /subscription { plan_id, billing_cycle: "monthly" }
+8. Invoice created → redirect to /billing/pay
+9. POST /billing/pay → get payment_url
+10. Redirect to Xendit checkout
+11. User pays → webhook activates subscription
+12. User returns → subscription active → dashboard
+```
+
+#### Scenario 4: User with Multiple Workspaces
+
+```
+1. User logs in
+2. GET /workspaces → returns multiple:
+   [
+     { entity_name: "Jiilan (Personal)", entity_type: "ORANG_PRIBADI" },
+     { entity_name: "PT Azzet", entity_type: "BADAN_USAHA" },
+     { entity_name: "CV Jiilan", entity_type: "BADAN_USAHA" }
+   ]
+3. Show workspace picker (/workspaces)
+4. User selects "PT Azzet" → store as X-Workspace-ID
+5. GET /subscription for PT Azzet → check status
+6. If active → dashboard
+7. If no subscription → /plans/select
+```
+
+#### Scenario 5: User Creates New Business Workspace
+
+```
+1. User is on /dashboard (personal workspace active)
+2. Clicks "Create Business Workspace"
+3. Redirect to /workspaces/new
+4. Fill form: nama_utama, entity_type=BADAN_USAHA, nik_npwp, etc.
+5. POST /entities → entity created
+6. POST /workspaces { entity_id } → workspace created
+7. Switch X-Workspace-ID to new workspace
+8. GET /subscription → 404 (new workspace, no plan)
+9. Redirect to /plans/select
+10. User subscribes → ready to use
+```
+
+#### Scenario 6: User Tries to Access Feature Without Subscription
+
+```
+1. User on workspace that has no subscription
+2. Tries to access /workspace/counterparties
+3. Frontend guard: GET /subscription → 404
+4. Redirect to /plans/select
+5. Show: "Subscribe to a plan to access this feature"
+```
+
+#### Scenario 7: User's Payment Failed
+
+```
+1. User subscribed to paid plan
+2. Invoice created but payment failed/expired
+3. GET /subscription → status = "active" (still within grace period)
+   OR status = "expired" (payment overdue)
+4. If expired:
+   - Show banner: "Payment overdue. Please pay to continue."
+   - Redirect to /workspace/billing
+   - Show unpaid invoice
+   - User clicks "Pay Now" → POST /billing/pay → Xendit checkout
+```
+
+---
+
+### Frontend State Machine
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                                                              │
+│  UNAUTHENTICATED                                             │
+│  ├── /login                                                  │
+│  ├── /register                                               │
+│  ├── /verify-email                                           │
+│  ├── /verify-whatsapp                                        │
+│  ├── /forgot-password                                        │
+│  └── /plans (public pricing)                                 │
+│                                                              │
+│  ─── Login Success ───────────────────────────────────────── │
+│                                                              │
+│  AUTHENTICATED (has access_token)                            │
+│  │                                                           │
+│  ├── NO WORKSPACE YET                                        │
+│  │   └── Show loading (poll GET /workspaces)                 │
+│  │                                                           │
+│  ├── HAS WORKSPACE, NO SUBSCRIPTION                          │
+│  │   ├── /workspaces (picker)                                │
+│  │   ├── /workspaces/new (create business)                   │
+│  │   └── /plans/select (choose plan) ← FORCED               │
+│  │                                                           │
+│  ├── HAS WORKSPACE + ACTIVE SUBSCRIPTION                     │
+│  │   ├── /dashboard                                          │
+│  │   ├── /workspace/members                                  │
+│  │   ├── /workspace/counterparties                           │
+│  │   ├── /workspace/billing                                  │
+│  │   ├── /workspace/settings                                 │
+│  │   └── (all business features)                             │
+│  │                                                           │
+│  └── SUBSCRIPTION EXPIRED                                    │
+│      └── /plans/select ← FORCED (must re-subscribe)          │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### API Calls for Guard Logic (Frontend Init)
+
+```javascript
+// On app load / page navigation:
+async function initGuard() {
+  // 1. Check auth
+  if (!accessToken) {
+    const refreshed = await tryRefresh();
+    if (!refreshed) return redirect('/login');
+  }
+
+  // 2. Check workspaces
+  const { data: workspaces } = await api.get('/workspaces');
+  
+  if (workspaces.length === 0) {
+    // Should not happen (created during registration)
+    // Fallback: redirect to manual creation
+    return redirect('/workspaces/new');
+  }
+
+  // 3. Auto-select workspace (or use last selected)
+  const wsId = localStorage.getItem('workspace_id') || workspaces[0].entity_id;
+  setWorkspaceHeader(wsId);
+
+  // 4. Check subscription
+  try {
+    const { data: sub } = await api.get('/subscription');
+    
+    if (sub.status === 'trial' && isExpiringSoon(sub.trial_ends_at)) {
+      showBanner('Trial expires soon. Upgrade now.');
+    }
+    
+    // All good - allow access
+    return ALLOW;
+    
+  } catch (err) {
+    if (err.status === 404) {
+      // No subscription - must select plan
+      return redirect('/plans/select');
+    }
+    throw err;
+  }
+}
+```
+
+---
+
+### localStorage Keys (Frontend Reference)
+
+| Key | Value | Purpose |
+|-----|-------|---------|
+| `workspace_id` | UUID string | Last selected workspace (for X-Workspace-ID header) |
+| `workspace_name` | string | Display name in navbar |
+| `theme` | "light" / "dark" | UI preference |
+
+**Note:** Access token is NEVER stored in localStorage. Only in memory (JS variable / React state).
+
+---
+
 ## Headers Reference
 
 ### Required for ALL authenticated requests:
@@ -1004,7 +1323,7 @@ axios.interceptors.response.use(
 
 3. **X-Workspace-ID is mandatory** for business endpoints. Frontend should have a workspace switcher and always send this header.
 
-4. **Personal entity is auto-created** after registration (via event system). May take 1-2 seconds. Poll `GET /workspaces` until it appears.
+4. **Personal entity + workspace are created instantly** during registration (synchronous). No polling needed. Workspace is always ready when user first logs in.
 
 5. **Password is always required** during registration (even for WhatsApp users) as fallback when OTP service is down.
 

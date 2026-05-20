@@ -43,10 +43,10 @@ const statusConfig: Record<
 
 function UsersPage() {
   const { activeWorkspace } = useWorkspaceStore();
-  const { data: members, isLoading } = useMembers(activeWorkspace?.id);
-  const inviteMutation = useInviteMember(activeWorkspace?.id);
-  const updateMutation = useUpdateMember(activeWorkspace?.id);
-  const removeMutation = useRemoveMember(activeWorkspace?.id);
+  const { data: members, isLoading } = useMembers(activeWorkspace?.entity_id);
+  const inviteMutation = useInviteMember(activeWorkspace?.entity_id);
+  const updateMutation = useUpdateMember(activeWorkspace?.entity_id);
+  const removeMutation = useRemoveMember(activeWorkspace?.entity_id);
 
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
