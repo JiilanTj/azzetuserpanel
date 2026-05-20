@@ -68,11 +68,12 @@ function AuthedLayout() {
   useEffect(() => {
     if (!activeWorkspace) return;
 
+    const workspace = activeWorkspace;
     let cancelled = false;
 
     async function fetchSubscription() {
       try {
-        const sub = await businessService.getSubscription(activeWorkspace.entity_id);
+        const sub = await businessService.getSubscription(workspace.entity_id);
         if (cancelled) return;
         setSubscription(sub);
 
