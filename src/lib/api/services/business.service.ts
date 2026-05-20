@@ -11,6 +11,9 @@ import type {
   InvoiceResponse,
   CreatePaymentRequest,
   PaymentResponse,
+  MemberResponse,
+  InviteMemberRequest,
+  UpdateMemberRequest,
 } from '../types'
 
 // Helper to construct headers with optional X-Workspace-ID
@@ -117,5 +120,49 @@ export const businessService = {
     apiClient
       .post('billing/pay', { json: body, headers: wsHeaders(workspaceId) })
       .json<APIResponse<PaymentResponse>>()
+      .then(r => r.data),
+
+  // -------------------------------------------------------
+  // Workspace Members
+  // -------------------------------------------------------
+
+  /**
+   * GET /workspaces/members
+   * List all members of the workspace.
+   */
+  listMembers: (workspaceId: string) =>
+    apiClient
+      .get('workspaces/members', { headers: wsHeaders(workspaceId) })
+      .json<APIResponse<MemberResponse[]>>()
+      .then(r => r.data),
+
+  /**
+   * POST /workspaces/members
+   * Invite a new member to the workspace.
+   */
+  inviteMember: (workspaceId: string, body: InviteMemberRequest) =>
+    apiClient
+      .post('workspaces/members', { json: body, headers: wsHeaders(workspaceId) })
+      .json<APIResponse<MemberResponse>>()
+      .then(r => r.data),
+
+  /**
+   * PATCH /workspaces/members/:id
+   * Update a member's role or status.
+   */
+  updateMember: (workspaceId: string, memberId: string, body: UpdateMemberRequest) =>
+    apiClient
+      .patch(`workspaces/members/${memberId}`, { json: body, headers: wsHeaders(workspaceId) })
+      .json<APIResponse<MemberResponse>>()
+      .then(r => r.data),
+
+  /**
+   * DELETE /workspaces/members/:id
+   * Remove a member from the workspace.
+   */
+  removeMember: (workspaceId: string, memberId: string) =>
+    apiClient
+      .delete(`workspaces/members/${memberId}`, { headers: wsHeaders(workspaceId) })
+      .json<APIResponse<{ message: string }>>()
       .then(r => r.data),
 }

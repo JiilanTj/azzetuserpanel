@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 
 type Theme = 'light' | 'dark'
 
-const STORAGE_KEY = 'azzet-admin-theme'
+const STORAGE_KEY = 'azzet-theme'
 
 function getInitialTheme(): Theme {
   if (typeof window === 'undefined') return 'light'

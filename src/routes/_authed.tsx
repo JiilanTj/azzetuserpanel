@@ -1,8 +1,8 @@
-import { createRoute, Outlet } from '@tanstack/react-router'
-import { rootRoute } from './__root'
-import { authMiddleware } from '@/middleware/auth.middleware'
-import { Sidebar } from '@/components/layout/sidebar'
-import { Header } from '@/components/layout/header'
+import { createRoute, Outlet } from "@tanstack/react-router";
+import { rootRoute } from "./__root";
+import { authMiddleware } from "@/middleware/auth.middleware";
+import { Sidebar } from "@/components/layout/sidebar";
+import { Header } from "@/components/layout/header";
 
 // -------------------------------------------------------
 // Auth guard — pathless layout route
@@ -11,10 +11,10 @@ import { Header } from '@/components/layout/header'
 
 export const authedLayout = createRoute({
   getParentRoute: () => rootRoute,
-  id: '_authed',
+  id: "_authed",
   loader: authMiddleware.requireAuth,
   component: AuthedLayout,
-})
+});
 
 // -------------------------------------------------------
 // Shell layout — composes Sidebar + Header + page content
@@ -31,5 +31,5 @@ function AuthedLayout() {
         </main>
       </div>
     </div>
-  )
+  );
 }

@@ -128,3 +128,33 @@ export interface PaymentResponse {
   expires_at: string
   created_at: string
 }
+
+// -------------------------------------------------------
+// Workspace Members
+// -------------------------------------------------------
+
+export type MemberStatus = 'active' | 'invited' | 'suspended'
+
+export interface MemberResponse {
+  id: string
+  entity_id: string
+  entity_name: string
+  entity_type: EntityType
+  role: WorkspaceRole
+  custom_alias: string | null
+  relation_type: string
+  status: MemberStatus
+  created_at: string
+}
+
+export interface InviteMemberRequest {
+  entity_id?: string
+  custom_alias?: string
+  role: WorkspaceRole
+}
+
+export interface UpdateMemberRequest {
+  role?: WorkspaceRole
+  custom_alias?: string
+  status?: MemberStatus
+}

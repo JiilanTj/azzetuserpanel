@@ -6,6 +6,8 @@ import type {
   CreateWorkspaceRequest,
   SubscribeRequest,
   CreatePaymentRequest,
+  InviteMemberRequest,
+  UpdateMemberRequest,
 } from '@/lib/api/types'
 
 export const businessKeys = {
@@ -14,6 +16,7 @@ export const businessKeys = {
   plans: () => [...businessKeys.all, 'plans'] as const,
   subscription: (workspaceId: string) => [...businessKeys.all, 'subscription', workspaceId] as const,
   invoices: (workspaceId: string) => [...businessKeys.all, 'invoices', workspaceId] as const,
+  members: (workspaceId: string) => [...businessKeys.all, 'members', workspaceId] as const,
 }
 
 // -------------------------------------------------------
@@ -120,6 +123,67 @@ export function usePayInvoice(workspaceId?: string) {
     },
     onError: (err: any) => {
       toast.error('Gagal membuat sesi pembayaran', { description: err.message })
+    },
+  })
+}
+
+// -------------------------------------------------------
+// Member Hooks
+// -------------------------------------------------------
+
+export function useMembers(workspaceId?: string) {
+  return useQuery({
+    queryKey: businessKeys.members(workspaceId ?? ''),
+    queryFn: () => businessService.listMembers(workspaceId!),
+    enabled: !!workspaceId,
+  })
+}
+
+export function useInviteMember(workspaceId?: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: InviteMemberRequest) => businessService.inviteMember(workspaceId!, body),
+    onSuccess: () => {
+      if (workspaceId) {
+        qc.invalidateQueries({ queryKey: businessKeys.members(workspaceId) })
+      }
+      toast.success('Anggota berhasil ditambahkan!')
+    },
+    onError: (err: any) => {
+      toast.error('Gagal menambahkan anggota', { description: err.message })
+    },
+  })
+}
+
+export function useUpdateMember(workspaceId?: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ memberId, body }: { memberId: string; body: UpdateMemberRequest }) =>
+      businessService.updateMember(workspaceId!, memberId, body),
+    onSuccess: () => {
+      if (workspaceId) {
+        qc.invalidateQueries({ queryKey: businessKeys.members(workspaceId) })
+      }
+      toast.success('Data anggota berhasil diperbarui.')
+    },
+    onError: (err: any) => {
+      toast.error('Gagal memperbarui anggota', { description: err.message })
+    },
+  })
+}
+
+export function useRemoveMember(workspaceId?: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (memberId: string) => businessService.removeMember(workspaceId!, memberId),
+    onSuccess: () => {
+      if (workspaceId) {
+        qc.invalidateQueries({ queryKey: businessKeys.members(workspaceId) })
+      }
+      toast.success('Anggota berhasil dihapus dari workspace.')
+    },
+    onError: (err: any) => {
+      toast.error('Gagal menghapus anggota', { description: err.message })
     },
   })
 }

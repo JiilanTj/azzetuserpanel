@@ -5,7 +5,6 @@ import { createRoute, useNavigate, Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import {
   ArrowRightIcon,
-  CheckCircledIcon,
   EnvelopeClosedIcon,
 } from '@radix-ui/react-icons'
 import { Button } from '@/components/ui'

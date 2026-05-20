@@ -10,10 +10,7 @@ import {
   ChevronDownIcon,
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
-  ChatBubbleIcon,
-  ReaderIcon,
 } from '@radix-ui/react-icons'
-import { useNavigate } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores/auth.store'
 import { useLogout } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
@@ -33,25 +30,13 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'Dashboard', Icon: DashboardIcon },
-  { to: '/users', label: 'Users', Icon: PersonIcon },
-  {
-    to: '/billing',
-    label: 'Billing',
-    Icon: CardStackIcon,
-    children: [
-      { to: '/billing', label: 'Overview' },
-      { to: '/billing/invoices', label: 'Invoices' },
-      { to: '/billing/history', label: 'History' },
-    ],
-  },
-  { to: '/plans', label: 'Plans', Icon: LayersIcon },
-  { to: '/settings', label: 'Settings', Icon: GearIcon },
+  { to: '/users', label: 'Anggota', Icon: PersonIcon },
+  { to: '/billing', label: 'Tagihan', Icon: CardStackIcon },
+  { to: '/plans', label: 'Langganan', Icon: LayersIcon },
+  { to: '/settings', label: 'Pengaturan', Icon: GearIcon },
 ]
 
-const BOTTOM_ITEMS: NavItem[] = [
-  { to: '/docs', label: 'Documentation', Icon: ReaderIcon },
-  { to: '/support', label: 'Support', Icon: ChatBubbleIcon },
-]
+const BOTTOM_ITEMS: NavItem[] = []
 
 // -------------------------------------------------------
 // Sidebar
@@ -59,7 +44,6 @@ const BOTTOM_ITEMS: NavItem[] = [
 
 export function Sidebar() {
   useAuthStore()
-  const navigate = useNavigate()
   const logoutMutation = useLogout()
   const currentPath = useRouterState({ select: s => s.location.pathname })
   const [collapsed, setCollapsed] = useState(false)

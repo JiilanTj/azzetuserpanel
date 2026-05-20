@@ -2,15 +2,27 @@ import { createRouter } from '@tanstack/react-router'
 import { rootRoute } from './routes/__root'
 import { indexRoute } from './routes/index'
 import { loginRoute } from './routes/login'
+import { registerRoute } from './routes/register'
+import { forgotPasswordRoute } from './routes/forgot-password'
+import { verifyEmailRoute } from './routes/verify-email'
+import { verifyWhatsappRoute } from './routes/verify-whatsapp'
 import { authedLayout } from './routes/_authed'
 import { dashboardRoute } from './routes/dashboard'
 import { uiOverviewRoute } from './routes/ui-overview'
-import { usersRoute, billingRoute, plansRoute, settingsRoute } from './routes/_stubs'
+import { plansRoute } from './routes/plans'
+import { workspacesNewRoute } from './routes/workspaces.new'
+import { usersRoute } from './routes/users'
+import { billingRoute } from './routes/billing'
+import { settingsRoute } from './routes/settings'
 
 const routeTree = rootRoute.addChildren([
   // Public routes
   indexRoute,
   loginRoute,
+  registerRoute,
+  forgotPasswordRoute,
+  verifyEmailRoute,
+  verifyWhatsappRoute,
 
   // Protected routes — wrapped in authed layout (auth guard + sidebar/header)
   authedLayout.addChildren([
@@ -20,6 +32,7 @@ const routeTree = rootRoute.addChildren([
     billingRoute,
     plansRoute,
     settingsRoute,
+    workspacesNewRoute,
   ]),
 ])
 
