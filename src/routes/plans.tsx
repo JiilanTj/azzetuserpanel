@@ -113,7 +113,7 @@ function PlansPage() {
                 </p>
                 <ul className="space-y-3">
                   {plan.features?.map((feat, idx) => {
-                    const isEnabled = feat.value_bool || feat.value_int > 0;
+                    const isEnabled = feat.value_bool === true || (feat.value_int != null && feat.value_int > 0) || !!feat.value_text;
                     return (
                       <li
                         key={idx}
@@ -133,7 +133,7 @@ function PlansPage() {
                           )}
                         >
                           {feat.feature_key === "max_entities"
-                            ? `Batas Entitas Maksimal: ${feat.value_int}`
+                            ? `Batas Entitas Maksimal: ${feat.value_int ?? 0}`
                             : feat.feature_key === "ocr_enabled"
                               ? "Teknologi Pemindai Dokumen OCR"
                               : feat.feature_key}

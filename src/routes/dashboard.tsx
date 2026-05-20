@@ -167,10 +167,12 @@ function DashboardPage() {
                     Berakhir
                   </p>
                   <p className="text-xs font-medium text-(--gray-12)">
-                    {new Date(subscription.expires_at).toLocaleDateString(
-                      "id-ID",
-                      { day: "numeric", month: "short", year: "numeric" },
-                    )}
+                    {subscription.expires_at
+                      ? new Date(subscription.expires_at).toLocaleDateString(
+                          "id-ID",
+                          { day: "numeric", month: "short", year: "numeric" },
+                        )
+                      : '-'}
                   </p>
                 </div>
                 {subscription.trial_ends_at && (
@@ -232,13 +234,13 @@ function DashboardPage() {
                     <p className="text-xs font-medium text-(--gray-12) truncate">
                       {member.custom_alias || member.entity_name}
                     </p>
-                    <p className="text-[10px] text-(--gray-9)">{member.role}</p>
+                    <p className="text-[10px] text-(--gray-9)">{member.role ?? '-'}</p>
                   </div>
                   <Badge
-                    variant={member.status === "active" ? "success" : "warning"}
+                    variant={member.status === "ACTIVE" ? "success" : "warning"}
                     className="text-[9px]"
                   >
-                    {member.status === "active" ? "Aktif" : "Diundang"}
+                    {member.status === "ACTIVE" ? "Aktif" : "Nonaktif"}
                   </Badge>
                 </div>
               ))}

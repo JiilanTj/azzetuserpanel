@@ -36,9 +36,8 @@ const statusConfig: Record<
   MemberStatus,
   { label: string; variant: "success" | "warning" | "gray" }
 > = {
-  active: { label: "Aktif", variant: "success" },
-  invited: { label: "Diundang", variant: "warning" },
-  suspended: { label: "Ditangguhkan", variant: "gray" },
+  ACTIVE: { label: "Aktif", variant: "success" },
+  INACTIVE: { label: "Nonaktif", variant: "gray" },
 };
 
 function UsersPage() {
@@ -244,7 +243,7 @@ function UsersPage() {
               <tbody>
                 {members.map((member) => {
                   const status =
-                    statusConfig[member.status] ?? statusConfig.active;
+                    statusConfig[member.status] ?? statusConfig.ACTIVE;
                   const isEditing = editingId === member.id;
 
                   return (
@@ -301,7 +300,7 @@ function UsersPage() {
                           </div>
                         ) : (
                           <Badge variant="soft">
-                            {roleLabels[member.role]}
+                            {roleLabels[member.role ?? 'VIEWER']}
                           </Badge>
                         )}
                       </td>
@@ -319,14 +318,14 @@ function UsersPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        {member.role !== "PEMILIK" && !isEditing && (
+                        {(member.role ?? 'VIEWER') !== "PEMILIK" && !isEditing && (
                           <div className="flex items-center justify-end gap-1">
                             <Button
                               variant="ghost"
                               size="1"
                               onClick={() => {
                                 setEditingId(member.id);
-                                setEditRole(member.role);
+                                setEditRole(member.role ?? 'VIEWER');
                               }}
                               className="text-(--gray-9) hover:text-(--blue-11)"
                             >

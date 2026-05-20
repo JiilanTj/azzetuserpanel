@@ -80,7 +80,7 @@ function ProfileSection() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <p className="text-xs text-(--gray-9) mb-0.5">Nama</p>
-          <p className="text-sm font-medium text-(--gray-12)">{user.name}</p>
+          <p className="text-sm font-medium text-(--gray-12)">{user.name ?? '-'}</p>
         </div>
         <div>
           <p className="text-xs text-(--gray-9) mb-0.5">Email</p>

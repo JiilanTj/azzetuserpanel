@@ -6,8 +6,8 @@ export function Header() {
   const { user } = useAuthStore()
   const { isDark, toggle } = useTheme()
 
-  const initials = user
-    ? user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+  const initials = user && user.name
+    ? user.name.split(' ').filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '??'
     : '??'
 
   return (

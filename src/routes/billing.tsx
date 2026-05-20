@@ -92,7 +92,7 @@ function BillingPage() {
                 Langganan Aktif
               </p>
               <p className="text-lg font-bold text-(--gray-12)">
-                {subscription.plan_name}
+                {subscription.plan_name ?? '-'}
               </p>
               <p className="text-xs text-(--gray-10) mt-0.5">
                 Siklus:{" "}
@@ -125,11 +125,13 @@ function BillingPage() {
             <div className="text-right">
               <p className="text-xs text-(--gray-9)">Berlaku hingga</p>
               <p className="text-sm font-semibold text-(--gray-12)">
-                {new Date(subscription.expires_at).toLocaleDateString("id-ID", {
-                  day: "numeric",
-                  month: "long",
-                  year: "numeric",
-                })}
+                {subscription.expires_at
+                  ? new Date(subscription.expires_at).toLocaleDateString("id-ID", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : '-'}
               </p>
             </div>
           </div>

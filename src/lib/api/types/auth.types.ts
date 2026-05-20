@@ -14,10 +14,10 @@ export type OTPPurpose = 'login' | 'verify_whatsapp' | 'verify_email' | 'reset_p
 
 export interface UserResponse {
   id: string
-  name: string
-  email: string | null
+  name?: string
+  email?: string
   email_verified: boolean
-  whatsapp: string | null
+  whatsapp?: string
   whatsapp_verified: boolean
   status: UserStatus
   created_at: string
@@ -131,8 +131,8 @@ export interface ResetPasswordRequest {
 
 export interface SessionResponse {
   id: string
-  device_name: string
-  ip_address: string
+  device_name?: string
+  ip_address?: string
   created_at: string
   last_used_at: string
 }
