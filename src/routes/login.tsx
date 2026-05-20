@@ -1,24 +1,22 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod/v4'
-import { createRoute, useNavigate } from '@tanstack/react-router'
+import { createRoute, useNavigate, Link } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import {
   EyeOpenIcon,
   EyeClosedIcon,
-  LockClosedIcon,
   ArrowRightIcon,
   CheckCircledIcon,
   MobileIcon,
-  LaptopIcon,
+  EnvelopeClosedIcon,
 } from '@radix-ui/react-icons'
-import { Button, Checkbox } from '@/components/ui'
+import { Button } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { rootRoute } from './__root'
 import { useLoginEmail, useLoginOTP, useRequestOTP } from '@/hooks/use-auth'
 import { authMiddleware } from '@/middleware/auth.middleware'
-import { useAuthStore } from '@/stores/auth.store'
 import logoSvg from '@/assets/logo.svg'
 
 export const loginRoute = createRoute({
@@ -30,29 +28,25 @@ export const loginRoute = createRoute({
 
 // ---- Zod schemas -----------------------------------------------
 
-const loginSchema = z.object({
-  email: z.email('Enter a valid email address.'),
-  password: z.string().min(6, 'Password must be at least 6 characters.'),
-  rememberMe: z.boolean(),
+const loginEmailSchema = z.object({
+  email: z.string().email('Format email tidak valid.'),
+  password: z.string().min(8, 'Password minimal 8 karakter.'),
 })
 
-const totpSchema = z.object({
-  code: z
-    .string()
-    .length(6, 'Code must be exactly 6 digits.')
-    .regex(/^\d+$/, 'Digits only.'),
+const requestOtpSchema = z.object({
+  whatsapp: z.string().regex(/^\+62\d{9,13}$/, 'Format nomor WhatsApp tidak valid. Harus diawali +62.'),
 })
 
-type LoginForm = z.infer<typeof loginSchema>
-type TotpForm  = z.infer<typeof totpSchema>
+const verifyOtpSchema = z.object({
+  otp: z.string().length(6, 'Kode OTP harus berisi 6 digit angka.').regex(/^\d+$/, 'Hanya angka.'),
+})
 
-// ---- Step type -------------------------------------------------
+type LoginEmailForm = z.infer<typeof loginEmailSchema>
+type RequestOtpForm = z.infer<typeof requestOtpSchema>
+type VerifyOtpForm = z.infer<typeof verifyOtpSchema>
 
-type Step =
-  | 'credentials'   // email + password
-  | 'mfa-verify'    // TOTP (MFA already enabled)
-  | 'mfa-setup-qr'  // Show QR code (first login, MFA not set up)
-  | 'mfa-setup-confirm' // Confirm TOTP after scanning QR
+type Method = 'email' | 'whatsapp'
+type Step = 'request-otp' | 'verify-otp'
 
 // ---- Left-panel metric card ------------------------------------
 
@@ -61,7 +55,7 @@ function MetricCard({ label, value, change, positive = true, className }: {
 }) {
   return (
     <div
-      className={cn('absolute rounded-2xl border border-white/10 px-4 py-3.5 shadow-xl w-48', className)}
+      className={cn('absolute rounded-2xl border border-white/10 px-4 py-3.5 shadow-xl w-48 transition-all duration-300 hover:scale-105', className)}
       style={{ backdropFilter: 'blur(16px)', background: 'rgba(255,255,255,0.08)' }}
     >
       <p className="text-[11px] font-medium leading-none text-white/50 mb-2.5">{label}</p>
@@ -74,103 +68,128 @@ function MetricCard({ label, value, change, positive = true, className }: {
 }
 
 const FEATURES = [
-  'Full control over all user accounts & permissions',
-  'Real-time system monitoring & audit trail',
-  'Billing management, invoices & subscription control',
+  'Kelola banyak entitas bisnis & workspace dengan mudah.',
+  'Manajemen tagihan, invoice & rencana langganan otomatis.',
+  'Kolaborasi tim dengan pembagian peran yang aman.',
 ]
-
-// ---- Main component --------------------------------------------
 
 function LoginPage() {
   const navigate = useNavigate()
-  const { setAuth } = useAuthStore()
-
-  const [step, setStep]           = useState<Step>('credentials')
-  const [mfaToken, setMfaToken]   = useState('')
-  const [qrCode, setQrCode]       = useState('')
-  const [secret, setSecret]       = useState('')
+  const [method, setMethod] = useState<Method>('email')
+  const [otpStep, setOtpStep] = useState<Step>('request-otp')
   const [showPassword, setShowPassword] = useState(false)
+  const [savedWhatsapp, setSavedWhatsapp] = useState('')
 
-  const loginMutation      = useLogin()
-  const mfaVerifyMutation  = useMfaVerify()
-  const mfaSetupMutation   = useMfaSetup()
-  const mfaConfirmMutation = useMfaConfirm()
+  // Countdown timer for OTP
+  const [timeLeft, setTimeLeft] = useState(0)
 
-  // ---- Step 1 form ----
+  useEffect(() => {
+    if (timeLeft <= 0) return
+    const interval = setInterval(() => {
+      setTimeLeft(t => t - 1)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [timeLeft])
+
+  const loginEmailMutation = useLoginEmail()
+  const requestOtpMutation = useRequestOTP()
+  const loginOtpMutation = useLoginOTP()
+
+  // ---- Forms ----
   const {
-    register: regLogin,
-    handleSubmit: handleLoginSubmit,
-    formState: { errors: le },
-  } = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '', rememberMe: false },
+    register: regEmail,
+    handleSubmit: handleEmailSubmit,
+    formState: { errors: ee },
+  } = useForm<LoginEmailForm>({
+    resolver: zodResolver(loginEmailSchema),
+    defaultValues: { email: '', password: '' },
   })
 
-  // ---- TOTP form (used for both mfa-verify and mfa-setup-confirm) ----
   const {
-    register: regTotp,
-    handleSubmit: handleTotpSubmit,
-    formState: { errors: te },
-    reset: resetTotp,
-  } = useForm<TotpForm>({
-    resolver: zodResolver(totpSchema),
-    defaultValues: { code: '' },
+    register: regReqOtp,
+    handleSubmit: handleReqOtpSubmit,
+    formState: { errors: we },
+  } = useForm<RequestOtpForm>({
+    resolver: zodResolver(requestOtpSchema),
+    defaultValues: { whatsapp: '' },
+  })
+
+  const {
+    register: regVerifyOtp,
+    handleSubmit: handleVerifyOtpSubmit,
+    formState: { errors: oe },
+    reset: resetVerifyOtp,
+  } = useForm<VerifyOtpForm>({
+    resolver: zodResolver(verifyOtpSchema),
+    defaultValues: { otp: '' },
   })
 
   // ---- Handlers ----
 
-  const onLoginSubmit = handleLoginSubmit(async ({ email, password }) => {
-    const data = await loginMutation.mutateAsync({ email, password })
-
-    if (data.requires_mfa) {
-      // Admin has MFA → go to TOTP verify step
-      setMfaToken(data.mfa_token ?? '')
-      setStep('mfa-verify')
-    } else {
-      // First login — temp access_token stored by useLogin hook
-      // Initiate MFA setup
-      const setup = await mfaSetupMutation.mutateAsync()
-      setQrCode(setup.qr_code)
-      setSecret(setup.secret)
-      setStep('mfa-setup-qr')
-    }
+  const onEmailSubmit = handleEmailSubmit(async ({ email, password }) => {
+    await loginEmailMutation.mutateAsync(
+      { email, password },
+      {
+        onSuccess: () => {
+          navigate({ to: '/dashboard' })
+        },
+      }
+    )
   })
 
-  const onMfaVerify = handleTotpSubmit(async ({ code }) => {
-    const data = await mfaVerifyMutation.mutateAsync({ mfa_token: mfaToken, code })
-    setAuth(data.access_token, data.admin)
-    navigate({ to: '/dashboard' })
+  const onReqOtpSubmit = handleReqOtpSubmit(async ({ whatsapp }) => {
+    await requestOtpMutation.mutateAsync(
+      { whatsapp, purpose: 'login' },
+      {
+        onSuccess: () => {
+          setSavedWhatsapp(whatsapp)
+          setOtpStep('verify-otp')
+          setTimeLeft(300) // 5 minutes
+          resetVerifyOtp()
+        },
+      }
+    )
   })
 
-  const onMfaSetupProceed = () => {
-    resetTotp()
-    setStep('mfa-setup-confirm')
+  const onVerifyOtpSubmit = handleVerifyOtpSubmit(async ({ otp }) => {
+    await loginOtpMutation.mutateAsync(
+      { whatsapp: savedWhatsapp, otp },
+      {
+        onSuccess: () => {
+          navigate({ to: '/dashboard' })
+        },
+      }
+    )
+  })
+
+  const handleResendOtp = async () => {
+    if (timeLeft > 0) return
+    await requestOtpMutation.mutateAsync(
+      { whatsapp: savedWhatsapp, purpose: 'login' },
+      {
+        onSuccess: () => {
+          setTimeLeft(300)
+          toast.success('Kode OTP berhasil dikirim ulang!')
+          resetVerifyOtp()
+        },
+      }
+    )
   }
 
-  const onMfaConfirm = handleTotpSubmit(async ({ code }) => {
-    const data = await mfaConfirmMutation.mutateAsync({ code })
-    setAuth(data.access_token, data.admin)
-    navigate({ to: '/dashboard' })
-  })
-
   const isLoading =
-    loginMutation.isPending ||
-    mfaVerifyMutation.isPending ||
-    mfaSetupMutation.isPending ||
-    mfaConfirmMutation.isPending
+    loginEmailMutation.isPending ||
+    requestOtpMutation.isPending ||
+    loginOtpMutation.isPending
 
-  // ---- Common input class helper ----
   const inputCls = (hasError: boolean) =>
     cn(
       'flex h-10 w-full rounded-lg border px-3 text-sm',
       'bg-(--gray-1) text-(--gray-12) placeholder:text-(--gray-9)',
       'transition-all duration-200 outline-none',
       hasError
-        ? 'border-red-500 focus:ring-2 focus:ring-red-400'
+        ? 'border-red-500 focus:ring-2 focus:ring-red-400/50'
         : 'border-(--gray-6) hover:border-(--gray-8) focus:ring-2 focus:ring-(--blue-9) focus:border-(--blue-8)'
     )
-
-  // ---- Render ----
 
   return (
     <div className="min-h-screen flex bg-(--color-background)">
@@ -193,9 +212,9 @@ function LoginPage() {
             backgroundSize: '40px 40px',
           }} />
 
-        <MetricCard label="Monthly Revenue" value="$2.4M"   change="↑ 12.4% vs last month"   positive className="top-[22%] right-[8%]" />
-        <MetricCard label="Active Users"    value="1,247"   change="↑ 84 new this week"       positive className="top-[43%] right-[8%]" />
-        <MetricCard label="System Uptime"   value="99.98%"  change="All systems operational"  positive className="top-[64%] right-[8%]" />
+        <MetricCard label="Total Penjualan" value="Rp48,2Jt" change="↑ 18.2% vs bulan lalu" positive className="top-[22%] right-[8%]" />
+        <MetricCard label="Workspace Aktif" value="3 Bisnis" change="Semua berjalan lancar" positive className="top-[43%] right-[8%]" />
+        <MetricCard label="Pembayaran Berhasil" value="100%" change="0 Transaksi tertunda" positive className="top-[64%] right-[8%]" />
 
         <div className="relative z-10 flex flex-col h-full px-12 py-10">
           <div className="flex items-center gap-3">
@@ -204,18 +223,17 @@ function LoginPage() {
           </div>
 
           <div className="flex-1 flex flex-col justify-center max-w-md">
-            <span className="inline-block text-xs font-semibold px-3 py-1 rounded-full border border-blue-400/30 text-blue-300 mb-6 w-fit"
+            <span className="inline-block text-xs font-semibold px-3 py-1 rounded-full border border-blue-400/30 text-blue-300 mb-6 w-fit animate-pulse"
               style={{ background: 'rgba(59,130,246,0.12)' }}>
-              Restricted Access · Admin Only
+              User Portal · Multi-Tenant
             </span>
             <h1 className="text-4xl font-bold text-white leading-tight mb-4">
-              Admin Control<br />
-              <span style={{ color: '#60a5fa' }}>Center</span> — built<br />
-              for your team.
+              Kelola Bisnis Anda<br />
+              <span style={{ color: '#60a5fa' }}>Lebih Efisien</span> dalam<br />
+              Satu Dasbor.
             </h1>
             <p className="text-white/55 text-base leading-relaxed mb-10">
-              Full visibility and control over users, workspaces, billing, and
-              system health — all in one secure place.
+              Sistem manajemen B2B finansial dan pembukuan SaaS modern yang disesuaikan untuk perkembangan bisnis Anda.
             </p>
             <ul className="flex flex-col gap-3">
               {FEATURES.map(f => (
@@ -243,198 +261,190 @@ function LoginPage() {
         </div>
 
         <div className="w-full max-w-[400px]">
+          {/* Method Selector Tabs */}
+          {method === 'email' || otpStep === 'request-otp' ? (
+            <div className="flex p-1 bg-(--gray-3) rounded-xl mb-8">
+              <button
+                type="button"
+                onClick={() => setMethod('email')}
+                className={cn(
+                  'flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer',
+                  method === 'email' ? 'bg-(--color-surface) text-(--gray-12) shadow-sm' : 'text-(--gray-10) hover:text-(--gray-12)'
+                )}
+              >
+                <EnvelopeClosedIcon className="h-3.5 w-3.5" />
+                Login Email
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMethod('whatsapp')
+                  setOtpStep('request-otp')
+                }}
+                className={cn(
+                  'flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer',
+                  method === 'whatsapp' ? 'bg-(--color-surface) text-(--gray-12) shadow-sm' : 'text-(--gray-10) hover:text-(--gray-12)'
+                )}
+              >
+                <MobileIcon className="h-3.5 w-3.5" />
+                Login WhatsApp OTP
+              </button>
+            </div>
+          ) : null}
 
-          {/* ========================= STEP 1: Credentials ========================= */}
-          {step === 'credentials' && (
+          {/* ========================= METHOD 1: Email + Password ========================= */}
+          {method === 'email' && (
             <>
               <div className="mb-8">
-                <h2 className="text-2xl font-bold text-(--gray-12) mb-1.5">Admin Sign In</h2>
+                <h2 className="text-2xl font-bold text-(--gray-12) mb-1.5">Sign In</h2>
                 <p className="text-sm text-(--gray-10)">
-                  This portal is restricted to authorized administrators only.
+                  Masuk ke akun Azzet kamu menggunakan email dan password.
                 </p>
               </div>
 
-              <form onSubmit={onLoginSubmit} noValidate className="flex flex-col gap-5">
+              <form onSubmit={onEmailSubmit} noValidate className="flex flex-col gap-5">
                 {/* Email */}
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="login-email" className="text-sm font-medium text-(--gray-12)">Email address</label>
-                  <input id="login-email" type="email" autoComplete="email" placeholder="you@azzet.io"
-                    {...regLogin('email')} className={inputCls(!!le.email)} />
-                  {le.email && <p className="text-xs text-red-500">{le.email.message}</p>}
+                  <label htmlFor="login-email" className="text-sm font-medium text-(--gray-12)">Alamat Email</label>
+                  <input id="login-email" type="email" autoComplete="email" placeholder="nama@email.com"
+                    {...regEmail('email')} className={inputCls(!!ee.email)} />
+                  {ee.email && <p className="text-xs text-red-500">{ee.email.message}</p>}
                 </div>
 
                 {/* Password */}
                 <div className="flex flex-col gap-1.5">
                   <div className="flex items-center justify-between">
                     <label htmlFor="login-password" className="text-sm font-medium text-(--gray-12)">Password</label>
-                    <button type="button"
-                      className="text-xs text-(--blue-11) hover:text-(--blue-9) transition-colors cursor-pointer">
-                      Forgot password?
-                    </button>
+                    <Link to="/forgot-password"
+                      className="text-xs text-(--blue-11) hover:text-(--blue-9) transition-colors font-medium">
+                      Lupa password?
+                    </Link>
                   </div>
                   <div className="relative">
                     <input id="login-password" type={showPassword ? 'text' : 'password'}
-                      autoComplete="current-password" placeholder="••••••••••"
-                      {...regLogin('password')}
-                      className={cn(inputCls(!!le.password), 'pr-10')} />
+                      autoComplete="current-password" placeholder="••••••••"
+                      {...regEmail('password')}
+                      className={cn(inputCls(!!ee.password), 'pr-10')} />
                     <button type="button" tabIndex={-1} onClick={() => setShowPassword(v => !v)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-(--gray-9) hover:text-(--gray-12) transition-colors cursor-pointer"
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                      aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}>
                       {showPassword ? <EyeClosedIcon className="h-4 w-4" /> : <EyeOpenIcon className="h-4 w-4" />}
                     </button>
                   </div>
-                  {le.password && <p className="text-xs text-red-500">{le.password.message}</p>}
+                  {ee.password && <p className="text-xs text-red-500">{ee.password.message}</p>}
                 </div>
-
-                {/* Remember me */}
-                <Checkbox id="remember-me" label="Keep me signed in for 30 days"
-                  {...regLogin('rememberMe')} />
 
                 <Button type="submit" variant="solid" size="3" loading={isLoading} className="w-full mt-1"
                   rightIcon={!isLoading ? <ArrowRightIcon /> : undefined}>
-                  {isLoading ? 'Signing in…' : 'Sign in'}
-                </Button>
-
-                <div className="flex items-center gap-3 my-1">
-                  <div className="flex-1 h-px bg-(--gray-5)" />
-                  <span className="text-xs text-(--gray-9) shrink-0">or continue with</span>
-                  <div className="flex-1 h-px bg-(--gray-5)" />
-                </div>
-
-                <Button type="button" variant="outline" size="3" className="w-full" leftIcon={<LockClosedIcon />}
-                  onClick={() => toast.info('SSO not configured', { description: 'Contact your IT administrator.' })}>
-                  Single Sign-On (SSO)
+                  {isLoading ? 'Masuk…' : 'Masuk'}
                 </Button>
               </form>
 
               <p className="mt-8 text-center text-xs text-(--gray-9)">
-                Not an admin?{' '}
-                <button type="button"
-                  className="text-(--blue-11) hover:text-(--blue-9) font-medium transition-colors cursor-pointer"
-                  onClick={() => toast.info('Contact your administrator to request access.')}>
-                  Request access
-                </button>
+                Belum punya akun?{' '}
+                <Link to="/register" className="text-(--blue-11) hover:text-(--blue-9) font-medium transition-colors">
+                  Daftar di sini
+                </Link>
               </p>
             </>
           )}
 
-          {/* ========================= STEP 2a: MFA Verify ========================= */}
-          {step === 'mfa-verify' && (
+          {/* ========================= METHOD 2a: Request WhatsApp OTP ========================= */}
+          {method === 'whatsapp' && otpStep === 'request-otp' && (
             <>
-              <button type="button" onClick={() => setStep('credentials')}
-                className="flex items-center gap-1.5 text-xs text-(--gray-10) hover:text-(--gray-12) mb-8 transition-colors cursor-pointer">
-                ← Back to sign in
-              </button>
-
               <div className="mb-8">
-                <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl mb-4"
-                  style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.2)' }}>
-                  <MobileIcon className="h-5 w-5 text-(--blue-11)" />
-                </div>
-                <h2 className="text-2xl font-bold text-(--gray-12) mb-1.5">Two-Factor Auth</h2>
+                <h2 className="text-2xl font-bold text-(--gray-12) mb-1.5">Login OTP WA</h2>
                 <p className="text-sm text-(--gray-10)">
-                  Open your authenticator app and enter the 6-digit code for your Azzet admin account.
+                  Gunakan nomor WhatsApp aktif untuk masuk secara instan tanpa password.
                 </p>
               </div>
 
-              <form onSubmit={onMfaVerify} noValidate className="flex flex-col gap-5">
+              <form onSubmit={onReqOtpSubmit} noValidate className="flex flex-col gap-5">
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="mfa-code" className="text-sm font-medium text-(--gray-12)">Verification code</label>
-                  <input id="mfa-code" type="text" inputMode="numeric" maxLength={6}
-                    autoComplete="one-time-code" placeholder="000000"
-                    {...regTotp('code')}
-                    className={cn(inputCls(!!te.code), 'text-center text-xl font-bold tracking-[0.5em] h-12')} />
-                  {te.code && <p className="text-xs text-red-500">{te.code.message}</p>}
+                  <label htmlFor="login-whatsapp" className="text-sm font-medium text-(--gray-12)">Nomor WhatsApp</label>
+                  <input id="login-whatsapp" type="tel" placeholder="+628123456789"
+                    {...regReqOtp('whatsapp')} className={inputCls(!!we.whatsapp)} />
+                  {we.whatsapp && <p className="text-xs text-red-500">{we.whatsapp.message}</p>}
                 </div>
 
                 <Button type="submit" variant="solid" size="3" loading={isLoading} className="w-full"
                   rightIcon={!isLoading ? <ArrowRightIcon /> : undefined}>
-                  {isLoading ? 'Verifying…' : 'Verify code'}
+                  {isLoading ? 'Mengirim OTP…' : 'Kirim Kode OTP'}
                 </Button>
               </form>
 
-              <p className="mt-6 text-center text-xs text-(--gray-9)">
-                Lost your authenticator?{' '}
-                <button type="button"
-                  className="text-(--blue-11) hover:text-(--blue-9) font-medium transition-colors cursor-pointer"
-                  onClick={() => toast.info('Contact your super administrator to reset MFA.')}>
-                  Get help
-                </button>
+              <p className="mt-8 text-center text-xs text-(--gray-9)">
+                Belum punya akun?{' '}
+                <Link to="/register" className="text-(--blue-11) hover:text-(--blue-9) font-medium transition-colors">
+                  Daftar di sini
+                </Link>
               </p>
             </>
           )}
 
-          {/* ========================= STEP 2b: MFA Setup QR ========================= */}
-          {step === 'mfa-setup-qr' && (
+          {/* ========================= METHOD 2b: Verify WhatsApp OTP ========================= */}
+          {method === 'whatsapp' && otpStep === 'verify-otp' && (
             <>
-              <div className="mb-8">
-                <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl mb-4"
-                  style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.2)' }}>
-                  <LaptopIcon className="h-5 w-5" style={{ color: '#16a34a' }} />
-                </div>
-                <h2 className="text-2xl font-bold text-(--gray-12) mb-1.5">Set up 2FA</h2>
-                <p className="text-sm text-(--gray-10)">
-                  Scan this QR code with your authenticator app (Google Authenticator, Authy, 1Password, etc.)
-                </p>
-              </div>
-
-              {/* QR Code — generated locally, secret never leaves the browser */}
-              <div className="flex flex-col items-center mb-6 p-6 rounded-2xl border border-(--gray-5) bg-(--gray-2)">
-                <div className="p-3 rounded-xl bg-white mb-4">
-                  <QRCodeSVG
-                    value={qrCode}
-                    size={152}
-                    level="M"
-                    includeMargin={false}
-                  />
-                </div>
-                <p className="text-xs text-(--gray-9) mb-1">Or enter the secret manually:</p>
-                <code className="text-xs font-mono bg-(--gray-3) px-3 py-1.5 rounded-lg text-(--gray-12) tracking-wider select-all">
-                  {secret}
-                </code>
-              </div>
-
-              <Button variant="solid" size="3" className="w-full" rightIcon={<ArrowRightIcon />}
-                onClick={onMfaSetupProceed}>
-                I've scanned the QR code →
-              </Button>
-            </>
-          )}
-
-          {/* ========================= STEP 2b: Confirm TOTP ========================= */}
-          {step === 'mfa-setup-confirm' && (
-            <>
-              <button type="button" onClick={() => setStep('mfa-setup-qr')}
+              <button type="button" onClick={() => setOtpStep('request-otp')}
                 className="flex items-center gap-1.5 text-xs text-(--gray-10) hover:text-(--gray-12) mb-8 transition-colors cursor-pointer">
-                ← Back to QR code
+                ← Kembali ke ubah nomor
               </button>
 
               <div className="mb-8">
-                <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl mb-4"
-                  style={{ background: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.2)' }}>
+                <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl mb-4 bg-(--blue-a3) border border-(--blue-a6)">
                   <MobileIcon className="h-5 w-5 text-(--blue-11)" />
                 </div>
-                <h2 className="text-2xl font-bold text-(--gray-12) mb-1.5">Confirm your code</h2>
+                <h2 className="text-2xl font-bold text-(--gray-12) mb-1.5">Verifikasi OTP</h2>
                 <p className="text-sm text-(--gray-10)">
-                  Enter the first 6-digit code from your authenticator app to confirm setup.
+                  Masukkan 6 digit kode OTP yang telah kami kirimkan ke nomor <strong className="text-(--gray-12)">{savedWhatsapp}</strong> via WhatsApp.
                 </p>
               </div>
 
-              <form onSubmit={onMfaConfirm} noValidate className="flex flex-col gap-5">
+              <form onSubmit={onVerifyOtpSubmit} noValidate className="flex flex-col gap-5">
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="mfa-confirm-code" className="text-sm font-medium text-(--gray-12)">Authentication code</label>
-                  <input id="mfa-confirm-code" type="text" inputMode="numeric" maxLength={6}
+                  <label htmlFor="otp-code" className="text-sm font-medium text-(--gray-12)">Kode OTP</label>
+                  <input id="otp-code" type="text" inputMode="numeric" maxLength={6}
                     autoComplete="one-time-code" placeholder="000000"
-                    {...regTotp('code')}
-                    className={cn(inputCls(!!te.code), 'text-center text-xl font-bold tracking-[0.5em] h-12')} />
-                  {te.code && <p className="text-xs text-red-500">{te.code.message}</p>}
+                    {...regVerifyOtp('otp')}
+                    className={cn(inputCls(!!oe.otp), 'text-center text-xl font-bold tracking-[0.5em] h-12')} />
+                  {oe.otp && <p className="text-xs text-red-500">{oe.otp.message}</p>}
                 </div>
 
                 <Button type="submit" variant="solid" size="3" loading={isLoading} className="w-full"
                   rightIcon={!isLoading ? <ArrowRightIcon /> : undefined}>
-                  {isLoading ? 'Enabling 2FA…' : 'Enable 2FA & Sign in'}
+                  {isLoading ? 'Verifikasi…' : 'Verifikasi & Masuk'}
                 </Button>
               </form>
+
+              <div className="mt-6 flex flex-col items-center gap-3">
+                <p className="text-xs text-(--gray-9)">
+                  {timeLeft > 0 ? (
+                    `Kirim ulang kode dalam ${Math.floor(timeLeft / 60)}:${String(timeLeft % 60).padStart(2, '0')}`
+                  ) : (
+                    <span>
+                      Tidak menerima kode?{' '}
+                      <button type="button" onClick={handleResendOtp} disabled={isLoading}
+                        className="text-(--blue-11) hover:text-(--blue-9) font-semibold transition-colors cursor-pointer">
+                        Kirim Ulang
+                      </button>
+                    </span>
+                  )}
+                </p>
+
+                <div className="w-full flex items-center gap-3 my-2">
+                  <div className="flex-1 h-px bg-(--gray-5)" />
+                  <span className="text-[10px] text-(--gray-9) shrink-0">atau</span>
+                  <div className="flex-1 h-px bg-(--gray-5)" />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setMethod('email')}
+                  className="text-xs text-(--blue-11) hover:text-(--blue-9) font-semibold transition-colors cursor-pointer"
+                >
+                  Masuk dengan password saja
+                </button>
+              </div>
             </>
           )}
 

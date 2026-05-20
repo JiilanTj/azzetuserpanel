@@ -3,11 +3,11 @@ import { useAuthStore } from '@/stores/auth.store'
 import { useTheme } from '@/hooks/use-theme'
 
 export function Header() {
-  const { admin } = useAuthStore()
+  const { user } = useAuthStore()
   const { isDark, toggle } = useTheme()
 
-  const initials = admin
-    ? admin.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+  const initials = user
+    ? user.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
     : '??'
 
   return (
@@ -56,7 +56,7 @@ export function Header() {
         </button>
 
         {/* Profile */}
-        {admin && (
+        {user && (
           <button className="flex items-center gap-2.5 h-10 pl-1.5 pr-3 rounded-surface bg-surface shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none border border-transparent dark:border-[#2a2a2a] hover:bg-gray-100 dark:hover:bg-[#1f1f1f] transition-colors cursor-pointer">
             <div
               className="h-7 w-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0"
@@ -65,8 +65,8 @@ export function Header() {
               {initials}
             </div>
             <div className="hidden sm:block text-left">
-              <p className="text-[12px] font-semibold text-[#1a1a1a] dark:text-white leading-none mb-0.5">{admin.name}</p>
-              <p className="text-[10px] text-[#9ca3af] leading-none">{admin.email}</p>
+              <p className="text-[12px] font-semibold text-[#1a1a1a] dark:text-white leading-none mb-0.5">{user.name}</p>
+              <p className="text-[10px] text-[#9ca3af] leading-none">{user.email || user.whatsapp}</p>
             </div>
           </button>
         )}

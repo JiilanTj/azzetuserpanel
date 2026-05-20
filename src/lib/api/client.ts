@@ -65,6 +65,12 @@ export const apiClient = ky.create({
         if (token) {
           request.headers.set('Authorization', `Bearer ${token}`)
         }
+
+        const { useWorkspaceStore } = await import('@/stores/workspace.store')
+        const activeWorkspace = useWorkspaceStore.getState().activeWorkspace
+        if (activeWorkspace && !request.headers.has('X-Workspace-ID')) {
+          request.headers.set('X-Workspace-ID', activeWorkspace.entity_id)
+        }
       },
     ],
     afterResponse: [
