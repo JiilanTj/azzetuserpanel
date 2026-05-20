@@ -1,0 +1,512 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+/* --------------------------------------------------
+   Rubik Font Declarations
+   -------------------------------------------------- */
+
+/* Normal styles */
+@font-face {
+  font-family: 'Rubik';
+  src: url('./assets/font/rubik/Rubik-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('./assets/font/rubik/Rubik-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('./assets/font/rubik/Rubik-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('./assets/font/rubik/Rubik-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('./assets/font/rubik/Rubik-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('./assets/font/rubik/Rubik-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('./assets/font/rubik/Rubik-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Italic styles */
+@font-face {
+  font-family: 'Rubik';
+  src: url('./assets/font/rubik/Rubik-LightItalic.ttf') format('truetype');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('./assets/font/rubik/Rubik-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('./assets/font/rubik/Rubik-MediumItalic.ttf') format('truetype');
+  font-weight: 500;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('./assets/font/rubik/Rubik-SemiBoldItalic.ttf') format('truetype');
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('./assets/font/rubik/Rubik-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('./assets/font/rubik/Rubik-ExtraBoldItalic.ttf') format('truetype');
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rubik';
+  src: url('./assets/font/rubik/Rubik-BlackItalic.ttf') format('truetype');
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* --------------------------------------------------
+   1. Theme Variable Definitions
+   -------------------------------------------------- */
+
+/* Light Theme Variables */
+:root, .light, .light-theme {
+  --blue-1: #fdfdfe;
+  --blue-2: #f7f9ff;
+  --blue-3: #ecf2fe;
+  --blue-4: #deeaff;
+  --blue-5: #cedfff;
+  --blue-6: #bbd2ff;
+  --blue-7: #a4c0f9;
+  --blue-8: #84a6ef;
+  --blue-9: #1f4cc5;
+  --blue-10: #113bb3;
+  --blue-11: #315dc7;
+  --blue-12: #1a2e5c;
+
+  --blue-a1: #00008002;
+  --blue-a2: #0040ff08;
+  --blue-a3: #0051f213;
+  --blue-a4: #005dff21;
+  --blue-a5: #0059ff31;
+  --blue-a6: #0057ff44;
+  --blue-a7: #014fef5b;
+  --blue-a8: #0147de7b;
+  --blue-a9: #0033bde0;
+  --blue-a10: #002daeee;
+  --blue-a11: #0037bace;
+  --blue-a12: #00164ae5;
+
+  --blue-contrast: #fff;
+  --blue-surface: #f5f8ffcc;
+  --blue-indicator: #1f4cc5;
+  --blue-track: #1f4cc5;
+
+  --gray-1: #fcfcfd;
+  --gray-2: #f9f9fb;
+  --gray-3: #eff0f3;
+  --gray-4: #e7e8ec;
+  --gray-5: #e0e1e6;
+  --gray-6: #d8d9e0;
+  --gray-7: #cdced7;
+  --gray-8: #b9bbc6;
+  --gray-9: #8b8d98;
+  --gray-10: #80828d;
+  --gray-11: #62636c;
+  --gray-12: #1e1f24;
+
+  --gray-a1: #00005503;
+  --gray-a2: #00005506;
+  --gray-a3: #00104010;
+  --gray-a4: #000b3618;
+  --gray-a5: #0009321f;
+  --gray-a6: #00073527;
+  --gray-a7: #00063332;
+  --gray-a8: #00083046;
+  --gray-a9: #00051d74;
+  --gray-a10: #00051b7f;
+  --gray-a11: #0002119d;
+  --gray-a12: #000107e1;
+
+  --gray-contrast: #FFFFFF;
+  --gray-surface: #ffffffcc;
+  --gray-indicator: #8b8d98;
+  --gray-track: #8b8d98;
+
+  --color-background: #f3f3f3;
+  --color-surface: #ffffff;
+
+  /* Success (Green) */
+  --green-2: #f4fbf6;
+  --green-3: #e9f9ee;
+  --green-6: #a6d9b4;
+  --green-9: #30a46c;
+  --green-11: #18794e;
+
+  /* Warning (Amber) */
+  --amber-2: #fefbe9;
+  --amber-3: #fff7c2;
+  --amber-6: #e4c767;
+  --amber-9: #e6a330;
+  --amber-11: #914d13;
+
+  /* Error (Red) */
+  --red-2: #fff8f8;
+  --red-3: #ffe4e4;
+  --red-6: #f4a8a8;
+  --red-9: #e5484d;
+  --red-11: #c62a2f;
+}
+
+/* Light P3 Wide Gamut Override */
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    :root, .light, .light-theme {
+      --blue-1: oklch(99.4% 0.0015 264.3);
+      --blue-2: oklch(98.3% 0.008 264.3);
+      --blue-3: oklch(96.1% 0.0172 264.3);
+      --blue-4: oklch(93.5% 0.0339 264.3);
+      --blue-5: oklch(90.3% 0.0513 264.3);
+      --blue-6: oklch(86.3% 0.0716 264.3);
+      --blue-7: oklch(80.7% 0.0871 264.3);
+      --blue-8: oklch(73% 0.1135 264.3);
+      --blue-9: oklch(46.8% 0.195 264.3);
+      --blue-10: oklch(41.5% 0.195 264.3);
+      --blue-11: oklch(51% 0.1732 264.3);
+      --blue-12: oklch(31.3% 0.0858 264.3);
+
+      --blue-a1: color(display-p3 0.0196 0.0196 0.5098 / 0.008);
+      --blue-a2: color(display-p3 0.0196 0.2667 0.8784 / 0.032);
+      --blue-a3: color(display-p3 0.0078 0.2824 0.8902 / 0.071);
+      --blue-a4: color(display-p3 0.0039 0.3255 0.9373 / 0.122);
+      --blue-a5: color(display-p3 0.0039 0.2863 0.9373 / 0.181);
+      --blue-a6: color(display-p3 0.0039 0.2824 0.9412 / 0.251);
+      --blue-a7: color(display-p3 0.0039 0.2588 0.8745 / 0.338);
+      --blue-a8: color(display-p3 0.0039 0.2275 0.8118 / 0.455);
+      --blue-a9: color(display-p3 0 0.1529 0.6941 / 0.832);
+      --blue-a10: color(display-p3 0 0.1294 0.6314 / 0.887);
+      --blue-a11: color(display-p3 0 0.1647 0.6784 / 0.765);
+      --blue-a12: color(display-p3 0 0.0627 0.2588 / 0.879);
+
+      --blue-surface: color(display-p3 0.9608 0.9725 1 / 0.8);
+      --blue-indicator: oklch(46.8% 0.195 264.3);
+      --blue-track: oklch(46.8% 0.195 264.3);
+
+      --gray-1: oklch(99.1% 0.0015 277.7);
+      --gray-2: oklch(98.2% 0.003 277.7);
+      --gray-3: oklch(95.6% 0.0045 277.7);
+      --gray-4: oklch(93.1% 0.0061 277.7);
+      --gray-5: oklch(91% 0.0077 277.7);
+      --gray-6: oklch(88.8% 0.0093 277.7);
+      --gray-7: oklch(85.3% 0.0117 277.7);
+      --gray-8: oklch(79.4% 0.016 277.7);
+      --gray-9: oklch(64.6% 0.0165 277.7);
+      --gray-10: oklch(61% 0.0161 277.7);
+      --gray-11: oklch(50.3% 0.0139 277.7);
+      --gray-12: oklch(24.1% 0.0099 277.7);
+
+      --gray-a1: color(display-p3 0.0235 0.0235 0.349 / 0.012);
+      --gray-a2: color(display-p3 0.0235 0.0235 0.349 / 0.024);
+      --gray-a3: color(display-p3 0.0078 0.0667 0.2549 / 0.063);
+      --gray-a4: color(display-p3 0.0118 0.051 0.2157 / 0.095);
+      --gray-a5: color(display-p3 0.0039 0.0392 0.2 / 0.122);
+      --gray-a6: color(display-p3 0.0039 0.0275 0.1804 / 0.153);
+      --gray-a7: color(display-p3 0.0078 0.0275 0.1843 / 0.197);
+      --gray-a8: color(display-p3 0.0039 0.0314 0.1765 / 0.275);
+      --gray-a9: color(display-p3 0.0039 0.0196 0.1059 / 0.455);
+      --gray-a10: color(display-p3 0.0039 0.0196 0.098 / 0.499);
+      --gray-a11: color(display-p3 0 0.0078 0.0588 / 0.616);
+      --gray-a12: color(display-p3 0 0.0039 0.0275 / 0.883);
+
+      --gray-surface: color(display-p3 1 1 1 / 80%);
+      --gray-indicator: oklch(64.6% 0.0165 277.7);
+      --gray-track: oklch(64.6% 0.0165 277.7);
+    }
+  }
+}
+
+/* Dark Theme Variables */
+.dark, .dark-theme {
+  --blue-1: #01030e;
+  --blue-2: #0b1428;
+  --blue-3: #0c2054;
+  --blue-4: #0d2973;
+  --blue-5: #133389;
+  --blue-6: #1b3f9c;
+  --blue-7: #234bb3;
+  --blue-8: #2958d2;
+  --blue-9: #1f4cc5;
+  --blue-10: #1e429f;
+  --blue-11: #8bb4ff;
+  --blue-12: #cde2ff;
+
+  --blue-a1: #0057b603;
+  --blue-a2: #479bfa1e;
+  --blue-a3: #2267fe4c;
+  --blue-a4: #1a5efd6d;
+  --blue-a5: #2261fe84;
+  --blue-a6: #2c68fe98;
+  --blue-a7: #316bfeb0;
+  --blue-a8: #316cffd0;
+  --blue-a9: #2763fec3;
+  --blue-a10: #306bfe9b;
+  --blue-a11: #8bb4ff;
+  --blue-a12: #cde2ff;
+
+  --blue-contrast: #fff;
+  --blue-surface: #13264480;
+  --blue-indicator: #1f4cc5;
+  --blue-track: #1f4cc5;
+
+  --gray-1: #030304;
+  --gray-2: #161618;
+  --gray-3: #202124;
+  --gray-4: #28292d;
+  --gray-5: #303035;
+  --gray-6: #393a40;
+  --gray-7: #46474f;
+  --gray-8: #5e606a;
+  --gray-9: #6c6e79;
+  --gray-10: #797b86;
+  --gray-11: #b2b3bd;
+  --gray-12: #eeeef0;
+
+  --gray-a1: #03820002;
+  --gray-a2: #eaf59e15;
+  --gray-a3: #ebfacc20;
+  --gray-a4: #effbdf28;
+  --gray-a5: #f8fceb2f;
+  --gray-a6: #f5fcf539;
+  --gray-a7: #f4fafd47;
+  --gray-a8: #eef5ff63;
+  --gray-a9: #ecf2fd73;
+  --gray-a10: #edf2fe81;
+  --gray-a11: #f3f4ffba;
+  --gray-a12: #fdfdfef0;
+
+  --gray-contrast: #FFFFFF;
+  --gray-surface: rgba(0, 0, 0, 0.05);
+  --gray-indicator: #6c6e79;
+  --gray-track: #6c6e79;
+
+  --color-background: #0a0a0a;
+  --color-surface: #141414;
+
+  /* Success (Green) */
+  --green-2: #0e2117;
+  --green-3: #12301e;
+  --green-6: #1e6a3e;
+  --green-9: #30a46c;
+  --green-11: #4cc38a;
+
+  /* Warning (Amber) */
+  --amber-2: #1f1300;
+  --amber-3: #2f1c00;
+  --amber-6: #6f4400;
+  --amber-9: #ffc53d;
+  --amber-11: #ffb224;
+
+  /* Error (Red) */
+  --red-2: #2d0b0e;
+  --red-3: #3b1219;
+  --red-6: #782128;
+  --red-9: #e5484d;
+  --red-11: #ff6369;
+}
+
+/* Dark P3 Wide Gamut Override */
+@supports (color: color(display-p3 1 1 1)) {
+  @media (color-gamut: p3) {
+    .dark, .dark-theme {
+      --blue-1: oklch(9.9% 0.0351 264.3);
+      --blue-2: oklch(19.4% 0.0428 264.3);
+      --blue-3: oklch(26.5% 0.0982 264.3);
+      --blue-4: oklch(31.5% 0.1328 264.3);
+      --blue-5: oklch(36% 0.1486 264.3);
+      --blue-6: oklch(40.3% 0.1571 264.3);
+      --blue-7: oklch(45.1% 0.1707 264.3);
+      --blue-8: oklch(50.5% 0.195 264.3);
+      --blue-9: oklch(46.8% 0.195 264.3);
+      --blue-10: oklch(41.5% 0.1571 264.3);
+      --blue-11: oklch(77.7% 0.1754 264.3);
+      --blue-12: oklch(91.1% 0.061 264.3);
+
+      --blue-a1: color(display-p3 0 0.4471 0.9176 / 0.009);
+      --blue-a2: color(display-p3 0.3529 0.6235 1 / 0.115);
+      --blue-a3: color(display-p3 0.2039 0.4196 1 / 0.287);
+      --blue-a4: color(display-p3 0.1843 0.3725 1 / 0.41);
+      --blue-a5: color(display-p3 0.2 0.3882 1 / 0.496);
+      --blue-a6: color(display-p3 0.2392 0.4196 1 / 0.57);
+      --blue-a7: color(display-p3 0.2627 0.4314 1 / 0.664);
+      --blue-a8: color(display-p3 0.2588 0.4353 1 / 0.787);
+      --blue-a9: color(display-p3 0.2235 0.3961 1 / 0.734);
+      --blue-a10: color(display-p3 0.2549 0.4314 1 / 0.582);
+      --blue-a11: color(display-p3 0.5922 0.7176 1 / 0.976);
+      --blue-a12: color(display-p3 0.8314 0.8941 1 / 0.988);
+
+      --blue-surface: color(display-p3 0.0863 0.149 0.251 / 0.5);
+      --blue-indicator: oklch(46.8% 0.195 264.3);
+      --blue-track: oklch(46.8% 0.195 264.3);
+
+      --gray-1: oklch(9.9% 0.0042 277.7);
+      --gray-2: oklch(20.2% 0.004 277.7);
+      --gray-3: oklch(24.8% 0.0055 277.7);
+      --gray-4: oklch(28.1% 0.0075 277.7);
+      --gray-5: oklch(31.2% 0.0089 277.7);
+      --gray-6: oklch(34.9% 0.01 277.7);
+      --gray-7: oklch(40.1% 0.0121 277.7);
+      --gray-8: oklch(49.2% 0.0157 277.7);
+      --gray-9: oklch(54% 0.0167 277.7);
+      --gray-10: oklch(58.6% 0.0165 277.7);
+      --gray-11: oklch(77% 0.0138 277.7);
+      --gray-12: oklch(94.9% 0.0026 277.7);
+
+      --gray-a1: color(display-p3 0.0157 0.9882 0 / 0.004);
+      --gray-a2: color(display-p3 0.9451 0.9882 0.6824 / 0.08);
+      --gray-a3: color(display-p3 0.9373 1 0.8431 / 0.123);
+      --gray-a4: color(display-p3 0.9451 0.9961 0.9059 / 0.155);
+      --gray-a5: color(display-p3 0.9843 1 0.949 / 0.182);
+      --gray-a6: color(display-p3 0.9686 0.9961 0.9608 / 0.222);
+      --gray-a7: color(display-p3 0.9686 0.9922 1 / 0.275);
+      --gray-a8: color(display-p3 0.9373 0.9647 1 / 0.386);
+      --gray-a9: color(display-p3 0.9333 0.9569 1 / 0.447);
+      --gray-a10: color(display-p3 0.9333 0.9569 0.9961 / 0.5);
+      --gray-a11: color(display-p3 0.9569 0.9608 1 / 0.726);
+      --gray-a12: color(display-p3 0.9922 0.9922 1 / 0.939);
+
+      --gray-surface: color(display-p3 0 0 0 / 5%);
+      --gray-indicator: oklch(54% 0.0167 277.7);
+      --gray-track: oklch(54% 0.0167 277.7);
+    }
+  }
+}
+
+/* Base Body Styles utilizing variables */
+body {
+  background-color: var(--color-background);
+  color: var(--gray-12);
+}
+
+
+/* --------------------------------------------------
+   2. Tailwind CSS v4 Theme Configurations
+   -------------------------------------------------- */
+@theme {
+  /* Default Sans Font */
+  --font-sans: 'Rubik', sans-serif;
+
+  /* Application-wide Background */
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  
+  /* Radii */
+  --radius-surface: 12px;
+
+  /* Blue Accent Colors */
+  --color-blue-1: var(--blue-1);
+  --color-blue-2: var(--blue-2);
+  --color-blue-3: var(--blue-3);
+  --color-blue-4: var(--blue-4);
+  --color-blue-5: var(--blue-5);
+  --color-blue-6: var(--blue-6);
+  --color-blue-7: var(--blue-7);
+  --color-blue-8: var(--blue-8);
+  --color-blue-9: var(--blue-9);
+  --color-blue-10: var(--blue-10);
+  --color-blue-11: var(--blue-11);
+  --color-blue-12: var(--blue-12);
+
+  --color-blue-a1: var(--blue-a1);
+  --color-blue-a2: var(--blue-a2);
+  --color-blue-a3: var(--blue-a3);
+  --color-blue-a4: var(--blue-a4);
+  --color-blue-a5: var(--blue-a5);
+  --color-blue-a6: var(--blue-a6);
+  --color-blue-a7: var(--blue-a7);
+  --color-blue-a8: var(--blue-a8);
+  --color-blue-a9: var(--blue-a9);
+  --color-blue-a10: var(--blue-a10);
+  --color-blue-a11: var(--blue-a11);
+  --color-blue-a12: var(--blue-a12);
+
+  /* Gray Neutral Colors */
+  --color-gray-1: var(--gray-1);
+  --color-gray-2: var(--gray-2);
+  --color-gray-3: var(--gray-3);
+  --color-gray-4: var(--gray-4);
+  --color-gray-5: var(--gray-5);
+  --color-gray-6: var(--gray-6);
+  --color-gray-7: var(--gray-7);
+  --color-gray-8: var(--gray-8);
+  --color-gray-9: var(--gray-9);
+  --color-gray-10: var(--gray-10);
+  --color-gray-11: var(--gray-11);
+  --color-gray-12: var(--gray-12);
+
+  --color-gray-a1: var(--gray-a1);
+  --color-gray-a2: var(--gray-a2);
+  --color-gray-a3: var(--gray-a3);
+  --color-gray-a4: var(--gray-a4);
+  --color-gray-a5: var(--gray-a5);
+  --color-gray-a6: var(--gray-a6);
+  --color-gray-a7: var(--gray-a7);
+  --color-gray-a8: var(--gray-a8);
+  --color-gray-a9: var(--gray-a9);
+  --color-gray-a10: var(--gray-a10);
+  --color-gray-a11: var(--gray-a11);
+  --color-gray-a12: var(--gray-a12);
+}
