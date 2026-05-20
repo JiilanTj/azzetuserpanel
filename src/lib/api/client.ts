@@ -26,11 +26,11 @@ async function doRefresh(): Promise<string> {
     const { useAuthStore } = await import('@/stores/auth.store')
 
     const res = await ky
-      .post(`${BASE_URL}/admin/auth/refresh`, { credentials: 'include' })
+      .post(`${BASE_URL}/auth/refresh`, { credentials: 'include' })
       .json<APIResponse<AuthResponse>>()
 
-    const { access_token, admin } = res.data
-    useAuthStore.getState().setAuth(access_token, admin)
+    const { access_token, user } = res.data
+    useAuthStore.getState().setAuth(access_token, user)
     drainQueue(null, access_token)
     return access_token
   } catch (err) {
@@ -72,8 +72,8 @@ export const apiClient = ky.create({
         const isAuth401 =
           response.status === 401 &&
           retryCount === 0 &&
-          !request.url.includes('/admin/auth/refresh') &&
-          !request.url.includes('/admin/auth/login')
+          !request.url.includes('/auth/refresh') &&
+          !request.url.includes('/auth/login/')
 
         if (!isAuth401) return response
 

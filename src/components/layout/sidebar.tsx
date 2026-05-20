@@ -15,7 +15,7 @@ import {
 } from '@radix-ui/react-icons'
 import { useNavigate } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores/auth.store'
-import { useLogout } from '@/hooks/use-admin-auth'
+import { useLogout } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
 import logoSvg from '@/assets/logo.svg'
 
@@ -65,9 +65,8 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({})
 
-  const handleLogout = async () => {
-    await logoutMutation.mutateAsync()
-    navigate({ to: '/login' })
+  const handleLogout = () => {
+    logoutMutation.mutate()
   }
 
   const toggleGroup = (key: string) => {

@@ -1,6 +1,6 @@
 import { redirect } from '@tanstack/react-router'
 import { useAuthStore } from '@/stores/auth.store'
-import { adminAuthService } from '@/lib/api/services'
+import { authService } from '@/lib/api/services'
 
 // -------------------------------------------------------
 // Auth Middleware
@@ -24,8 +24,8 @@ async function tryRefresh(): Promise<boolean> {
   if (isAuthenticated) return true
 
   try {
-    const data = await adminAuthService.refresh()
-    setAuth(data.access_token, data.admin)
+    const data = await authService.refresh()
+    setAuth(data.access_token, data.user)
     return true
   } catch {
     return false
