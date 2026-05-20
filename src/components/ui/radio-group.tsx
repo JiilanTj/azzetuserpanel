@@ -31,7 +31,7 @@ const RadioGroupItem = React.forwardRef<
           // Size: 18×18px — slightly bigger than before, sits nicely at text-sm baseline
           'h-[18px] w-[18px] shrink-0 rounded-full border-2 border-(--gray-7)',
           'transition-all duration-200 cursor-pointer',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--blue-9) focus-visible:ring-offset-2 focus-visible:ring-offset-(--color-background)',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--blue-9) focus-visible:ring-offset-2 focus-visible:ring-offset-background',
           'disabled:cursor-not-allowed disabled:opacity-40',
           'data-[state=checked]:border-(--blue-9)',
           // Center with first line of label text

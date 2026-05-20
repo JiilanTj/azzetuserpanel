@@ -32,7 +32,7 @@ const TabsTrigger = React.forwardRef<
       'hover:text-(--gray-12)',
       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--blue-9) focus-visible:ring-offset-2',
       'disabled:pointer-events-none disabled:opacity-40',
-      'data-[state=active]:bg-(--color-background) data-[state=active]:text-(--gray-12) data-[state=active]:shadow-sm',
+      'data-[state=active]:bg-background data-[state=active]:text-(--gray-12) data-[state=active]:shadow-sm',
       className
     )}
     {...props}

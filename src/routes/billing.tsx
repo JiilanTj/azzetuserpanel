@@ -65,7 +65,7 @@ function BillingPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-100">
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-(--blue-9) border-t-transparent" />
       </div>
     );
@@ -85,7 +85,7 @@ function BillingPage() {
 
       {/* Subscription Summary Card */}
       {subscription && (
-        <div className="rounded-2xl border border-(--gray-4) bg-(--color-surface) p-6">
+        <div className="rounded-2xl border border-(--gray-4) bg-surface p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <p className="text-xs font-medium text-(--gray-9) uppercase tracking-wider mb-1">
@@ -137,7 +137,7 @@ function BillingPage() {
       )}
 
       {/* Invoices Table */}
-      <div className="rounded-2xl border border-(--gray-4) bg-(--color-surface) overflow-hidden">
+      <div className="rounded-2xl border border-(--gray-4) bg-surface overflow-hidden">
         <div className="px-6 py-4 border-b border-(--gray-4)">
           <div className="flex items-center gap-2">
             <FileTextIcon className="h-4 w-4 text-(--gray-9)" />
