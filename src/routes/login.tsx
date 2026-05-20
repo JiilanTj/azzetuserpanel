@@ -11,11 +11,14 @@ import {
   CheckCircledIcon,
   MobileIcon,
   EnvelopeClosedIcon,
+  SunIcon,
+  MoonIcon,
 } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { rootRoute } from "./__root";
 import { useLoginEmail, useLoginOTP, useRequestOTP } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { authMiddleware } from "@/middleware/auth.middleware";
 import logoSvg from "@/assets/logo.svg";
 
@@ -105,6 +108,24 @@ const FEATURES = [
   "Manajemen tagihan, invoice & rencana langganan otomatis.",
   "Kolaborasi tim dengan pembagian peran yang aman.",
 ];
+
+function ThemeToggle() {
+  const { isDark, toggle } = useTheme();
+  return (
+    <button
+      onClick={toggle}
+      className="flex items-center justify-center h-10 w-10 rounded-surface bg-surface shadow-[0_1px_2px_rgba(0,0,0,0.04)] dark:shadow-none border border-transparent dark:border-[#2a2a2a] text-[#6b7280] hover:text-[#1a1a1a] dark:text-[#9ca3af] dark:hover:text-white transition-colors cursor-pointer"
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      title={isDark ? "Light mode" : "Dark mode"}
+    >
+      {isDark ? (
+        <SunIcon className="h-[18px] w-[18px]" />
+      ) : (
+        <MoonIcon className="h-[18px] w-[18px]" />
+      )}
+    </button>
+  );
+}
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -329,6 +350,11 @@ function LoginPage() {
       {/* RIGHT — form panel                                      */}
       {/* ===================================================== */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 sm:px-12">
+        {/* Theme Switcher */}
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
+
         {/* Mobile logo */}
         <div className="lg:hidden flex items-center gap-2 mb-10">
           <img src={logoSvg} alt="Azzet" className="h-8 w-8" />

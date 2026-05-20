@@ -11,6 +11,8 @@ import {
   CheckCircledIcon,
   EnvelopeClosedIcon,
   MobileIcon,
+  CheckIcon,
+  Cross2Icon,
 } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -28,31 +30,23 @@ export const registerRoute = createRoute({
 
 // ---- Zod schema -----------------------------------------------
 
-const registerSchema = z
-  .object({
-    name: z.string().min(2, "Nama harus berisi minimal 2 karakter."),
-    method: z.enum(["email", "whatsapp"]),
-    email: z.string().email("Format email tidak valid.").optional(),
-    whatsapp: z
-      .string()
-      .regex(
-        /^\+62\d{9,13}$/,
-        "Format nomor WhatsApp tidak valid. Harus diawali +62.",
-      )
-      .optional(),
-    password: z.string().min(8, "Password minimal 8 karakter."),
-  })
-  .refine(
-    (data) => {
-      if (data.method === "email" && !data.email) return false;
-      if (data.method === "whatsapp" && !data.whatsapp) return false;
-      return true;
-    },
-    {
-      message: "Isian sesuai metode terpilih wajib diisi.",
-      path: ["method"],
-    },
-  );
+const registerSchema = z.object({
+  name: z.string().min(2, "Nama harus berisi minimal 2 karakter."),
+  method: z.enum(["email", "whatsapp"]),
+  email: z
+    .string()
+    .refine((v) => v === "" || z.string().email().safeParse(v).success, {
+      message: "Format email tidak valid.",
+    }),
+  whatsapp: z
+    .string()
+    .refine(
+      (v) => v === "" || /^\+62\d{9,13}$/.test(v),
+      "Format nomor WhatsApp tidak valid. Harus diawali +62.",
+    ),
+  password: z.string().min(8, "Password minimal 8 karakter."),
+  confirm_password: z.string().min(1, "Konfirmasi password wajib diisi."),
+});
 
 type RegisterForm = z.infer<typeof registerSchema>;
 
@@ -106,6 +100,116 @@ const FEATURES = [
   "Kolaborasi tim dengan pembagian peran yang aman.",
 ];
 
+// ---- Password strength helpers ----------------------------------
+
+type StrengthLevel = "none" | "weak" | "medium" | "strong";
+
+const PASSWORD_RULES = [
+  {
+    key: "length",
+    label: "Minimal 8 karakter",
+    test: (p: string) => p.length >= 8,
+  },
+  {
+    key: "uppercase",
+    label: "Huruf besar (A-Z)",
+    test: (p: string) => /[A-Z]/.test(p),
+  },
+  {
+    key: "lowercase",
+    label: "Huruf kecil (a-z)",
+    test: (p: string) => /[a-z]/.test(p),
+  },
+  { key: "number", label: "Angka (0-9)", test: (p: string) => /\d/.test(p) },
+  {
+    key: "symbol",
+    label: "Simbol (!@#$...)",
+    test: (p: string) => /[^A-Za-z0-9]/.test(p),
+  },
+] as const;
+
+function getPasswordStrength(password: string): {
+  level: StrengthLevel;
+  score: number;
+} {
+  if (!password) return { level: "none", score: 0 };
+  const score = PASSWORD_RULES.filter((r) => r.test(password)).length;
+  if (score <= 2) return { level: "weak", score };
+  if (score <= 3) return { level: "medium", score };
+  return { level: "strong", score };
+}
+
+const strengthConfig: Record<
+  Exclude<StrengthLevel, "none">,
+  { label: string; color: string; barColor: string }
+> = {
+  weak: { label: "Lemah", color: "text-red-500", barColor: "bg-red-500" },
+  medium: {
+    label: "Medium",
+    color: "text-amber-500",
+    barColor: "bg-amber-500",
+  },
+  strong: {
+    label: "Kuat",
+    color: "text-emerald-500",
+    barColor: "bg-emerald-500",
+  },
+};
+
+function PasswordStrengthIndicator({ password }: { password: string }) {
+  const { level, score } = getPasswordStrength(password);
+
+  if (level === "none") return null;
+
+  const config = strengthConfig[level];
+
+  return (
+    <div className="flex flex-col gap-2 mt-2">
+      {/* Strength bar */}
+      <div className="flex items-center gap-2">
+        <div className="flex-1 flex gap-1">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div
+              key={i}
+              className={cn(
+                "h-1.5 flex-1 rounded-full transition-colors",
+                i <= score ? config.barColor : "bg-(--gray-4)",
+              )}
+            />
+          ))}
+        </div>
+        <span className={cn("text-[11px] font-semibold", config.color)}>
+          {config.label}
+        </span>
+      </div>
+
+      {/* Rules checklist */}
+      <div className="flex flex-col gap-1">
+        {PASSWORD_RULES.map((rule) => {
+          const passed = rule.test(password);
+          return (
+            <div key={rule.key} className="flex items-center gap-1.5">
+              {passed ? (
+                <CheckIcon className="h-3 w-3 text-emerald-500 shrink-0" />
+              ) : (
+                <Cross2Icon className="h-3 w-3 text-(--gray-7) shrink-0" />
+              )}
+              <span
+                className={cn(
+                  "text-[11px]",
+                  passed ? "text-emerald-600" : "text-(--gray-9)",
+                )}
+              >
+                {rule.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function RegisterPage() {
   const navigate = useNavigate();
   const registerMutation = useRegister();
@@ -113,9 +217,10 @@ function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   const {
-    register: regForm,
+    register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -125,10 +230,33 @@ function RegisterPage() {
       email: "",
       whatsapp: "",
       password: "",
+      confirm_password: "",
     },
   });
 
-  const onSubmit = handleSubmit(async (data) => {
+  const watchPassword = watch("password") ?? "";
+  const watchConfirmPassword = watch("confirm_password") ?? "";
+
+  const isPasswordValid =
+    PASSWORD_RULES.every((r) => r.test(watchPassword)) &&
+    watchPassword === watchConfirmPassword &&
+    watchConfirmPassword.length > 0;
+
+  const onSubmit = async (data: RegisterForm) => {
+    // Manual cross-field validation
+    if (data.method === "email" && !data.email) {
+      toast.error("Email wajib diisi.");
+      return;
+    }
+    if (data.method === "whatsapp" && !data.whatsapp) {
+      toast.error("Nomor WhatsApp wajib diisi.");
+      return;
+    }
+    if (data.password !== data.confirm_password) {
+      toast.error("Konfirmasi password tidak cocok.");
+      return;
+    }
+
     const payload = {
       name: data.name,
       password: data.password,
@@ -150,7 +278,7 @@ function RegisterPage() {
         }
       },
     });
-  });
+  };
 
   const inputCls = (hasError: boolean) =>
     cn(
@@ -317,7 +445,14 @@ function RegisterPage() {
             </button>
           </div>
 
-          <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+            className="flex flex-col gap-5"
+          >
+            {/* Hidden method field */}
+            <input type="hidden" {...register("method")} />
+
             {/* Name */}
             <div className="flex flex-col gap-1.5">
               <label
@@ -330,7 +465,7 @@ function RegisterPage() {
                 id="reg-name"
                 type="text"
                 placeholder="Jiilan Nashrulloh"
-                {...regForm("name")}
+                {...register("name")}
                 className={inputCls(!!errors.name)}
               />
               {errors.name && (
@@ -351,7 +486,7 @@ function RegisterPage() {
                   id="reg-email"
                   type="email"
                   placeholder="nama@email.com"
-                  {...regForm("email")}
+                  {...register("email")}
                   className={inputCls(!!errors.email)}
                 />
                 {errors.email && (
@@ -373,7 +508,7 @@ function RegisterPage() {
                   id="reg-whatsapp"
                   type="tel"
                   placeholder="+628123456789"
-                  {...regForm("whatsapp")}
+                  {...register("whatsapp")}
                   className={inputCls(!!errors.whatsapp)}
                 />
                 {errors.whatsapp && (
@@ -397,7 +532,7 @@ function RegisterPage() {
                   id="reg-password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  {...regForm("password")}
+                  {...register("password")}
                   className={cn(inputCls(!!errors.password), "pr-10")}
                 />
                 <button
@@ -421,6 +556,48 @@ function RegisterPage() {
                   {errors.password.message}
                 </p>
               )}
+              <PasswordStrengthIndicator password={watchPassword} />
+            </div>
+
+            {/* Confirm Password */}
+            <div className="flex flex-col gap-1.5">
+              <label
+                htmlFor="reg-confirm-password"
+                className="text-sm font-medium text-(--gray-12)"
+              >
+                Konfirmasi Password
+              </label>
+              <input
+                id="reg-confirm-password"
+                type="password"
+                placeholder="••••••••"
+                {...register("confirm_password")}
+                className={inputCls(!!errors.confirm_password)}
+              />
+              {watchConfirmPassword && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  {watchPassword === watchConfirmPassword ? (
+                    <>
+                      <CheckIcon className="h-3 w-3 text-emerald-500" />
+                      <span className="text-[11px] text-emerald-600 font-medium">
+                        Password cocok
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Cross2Icon className="h-3 w-3 text-red-500" />
+                      <span className="text-[11px] text-red-500 font-medium">
+                        Password tidak cocok
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+              {errors.confirm_password && !watchConfirmPassword && (
+                <p className="text-xs text-red-500">
+                  {errors.confirm_password.message}
+                </p>
+              )}
             </div>
 
             <Button
@@ -428,6 +605,7 @@ function RegisterPage() {
               variant="solid"
               size="3"
               loading={registerMutation.isPending}
+              disabled={!isPasswordValid}
               className="w-full mt-1"
               rightIcon={
                 !registerMutation.isPending ? <ArrowRightIcon /> : undefined
