@@ -26,8 +26,8 @@ export const businessKeys = {
 export function useCreateEntity() {
   return useMutation({
     mutationFn: (body: CreateEntityRequest) => businessService.createEntity(body),
-    onError: (err: any) => {
-      toast.error('Gagal membuat entitas bisnis', { description: err.message })
+    onError: (err: unknown) => {
+      toast.error('Gagal membuat entitas bisnis', { description: err instanceof Error ? err.message : String(err) })
     },
   })
 }
@@ -50,8 +50,8 @@ export function useCreateWorkspace() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: businessKeys.workspaces() })
     },
-    onError: (err: any) => {
-      toast.error('Gagal membuat workspace', { description: err.message })
+    onError: (err: unknown) => {
+      toast.error('Gagal membuat workspace', { description: err instanceof Error ? err.message : String(err) })
     },
   })
 }
@@ -90,8 +90,8 @@ export function useSubscribe(workspaceId?: string) {
       }
       toast.success('Pendaftaran langganan berhasil diproses!')
     },
-    onError: (err: any) => {
-      toast.error('Gagal memproses langganan', { description: err.message })
+    onError: (err: unknown) => {
+      toast.error('Gagal memproses langganan', { description: err instanceof Error ? err.message : String(err) })
     },
   })
 }
@@ -121,8 +121,8 @@ export function usePayInvoice(workspaceId?: string) {
         window.location.href = data.payment_url
       }
     },
-    onError: (err: any) => {
-      toast.error('Gagal membuat sesi pembayaran', { description: err.message })
+    onError: (err: unknown) => {
+      toast.error('Gagal membuat sesi pembayaran', { description: err instanceof Error ? err.message : String(err) })
     },
   })
 }
@@ -149,8 +149,8 @@ export function useInviteMember(workspaceId?: string) {
       }
       toast.success('Anggota berhasil ditambahkan!')
     },
-    onError: (err: any) => {
-      toast.error('Gagal menambahkan anggota', { description: err.message })
+    onError: (err: unknown) => {
+      toast.error('Gagal menambahkan anggota', { description: err instanceof Error ? err.message : String(err) })
     },
   })
 }
@@ -166,8 +166,8 @@ export function useUpdateMember(workspaceId?: string) {
       }
       toast.success('Data anggota berhasil diperbarui.')
     },
-    onError: (err: any) => {
-      toast.error('Gagal memperbarui anggota', { description: err.message })
+    onError: (err: unknown) => {
+      toast.error('Gagal memperbarui anggota', { description: err instanceof Error ? err.message : String(err) })
     },
   })
 }
@@ -182,8 +182,8 @@ export function useRemoveMember(workspaceId?: string) {
       }
       toast.success('Anggota berhasil dihapus dari workspace.')
     },
-    onError: (err: any) => {
-      toast.error('Gagal menghapus anggota', { description: err.message })
+    onError: (err: unknown) => {
+      toast.error('Gagal menghapus anggota', { description: err instanceof Error ? err.message : String(err) })
     },
   })
 }

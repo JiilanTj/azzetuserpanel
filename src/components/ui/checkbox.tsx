@@ -10,7 +10,8 @@ const Checkbox = React.forwardRef<
     hint?: string
   }
 >(({ className, label, hint, id, ...props }, ref) => {
-  const checkboxId = id ?? React.useId()
+  const generatedId = React.useId()
+  const checkboxId = id ?? generatedId
   return (
     <div className="flex gap-3">
       <CheckboxPrimitive.Root

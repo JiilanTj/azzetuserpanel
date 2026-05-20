@@ -20,7 +20,8 @@ const SelectTrigger = React.forwardRef<
     hint?: string
   }
 >(({ className, children, label, error, errorMessage, hint, id, ...props }, ref) => {
-  const selectId = id ?? React.useId()
+  const generatedId = React.useId()
+  const selectId = id ?? generatedId
   return (
     <div className="flex flex-col gap-1.5 w-full">
       {label && (

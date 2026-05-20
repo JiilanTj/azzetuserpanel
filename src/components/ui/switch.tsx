@@ -9,7 +9,8 @@ const Switch = React.forwardRef<
     hint?: string
   }
 >(({ className, label, hint, id, ...props }, ref) => {
-  const switchId = id ?? React.useId()
+  const generatedId = React.useId()
+  const switchId = id ?? generatedId
   return (
     <div className="flex items-start gap-3">
       <SwitchPrimitive.Root
