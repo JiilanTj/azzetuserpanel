@@ -15,6 +15,7 @@ import {
   MoonIcon,
 } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui";
+import { WhatsAppInput } from "@/components/ui/whatsapp-input";
 import { cn } from "@/lib/utils";
 import { rootRoute } from "./__root";
 import { useLoginEmail, useLoginOTP, useRequestOTP } from "@/hooks/use-auth";
@@ -160,9 +161,10 @@ function LoginPage() {
   });
 
   const {
-    register: regReqOtp,
     handleSubmit: handleReqOtpSubmit,
     formState: { errors: we },
+    watch: watchOtp,
+    setValue: setOtpValue,
   } = useForm<RequestOtpForm>({
     resolver: zodResolver(requestOtpSchema),
     defaultValues: { whatsapp: "" },
@@ -527,26 +529,14 @@ function LoginPage() {
                 noValidate
                 className="flex flex-col gap-5"
               >
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    htmlFor="login-whatsapp"
-                    className="text-sm font-medium text-(--gray-12)"
-                  >
-                    Nomor WhatsApp
-                  </label>
-                  <input
-                    id="login-whatsapp"
-                    type="tel"
-                    placeholder="+628123456789"
-                    {...regReqOtp("whatsapp")}
-                    className={inputCls(!!we.whatsapp)}
-                  />
-                  {we.whatsapp && (
-                    <p className="text-xs text-red-500">
-                      {we.whatsapp.message}
-                    </p>
-                  )}
-                </div>
+                <WhatsAppInput
+                  id="login-whatsapp"
+                  value={watchOtp("whatsapp")}
+                  onChange={(val) => setOtpValue("whatsapp", val, { shouldValidate: true })}
+                  error={!!we.whatsapp}
+                  errorMessage={we.whatsapp?.message}
+                  hint="Masukkan nomor setelah +62, contoh: 8123456789"
+                />
 
                 <Button
                   type="submit"

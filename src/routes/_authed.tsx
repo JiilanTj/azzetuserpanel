@@ -82,10 +82,8 @@ function AuthedLayout() {
         }
       } catch {
         if (cancelled) return;
-        const currentPath = window.location.pathname;
-        if (currentPath !== '/plans' && currentPath !== '/workspaces/new') {
-          navigate({ to: "/plans", replace: true });
-        }
+        // No subscription found — redirect to plan selection
+        navigate({ to: "/plans", replace: true });
       }
     }
 

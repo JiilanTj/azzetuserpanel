@@ -68,6 +68,20 @@ export function usePlans() {
   })
 }
 
+export function usePlansWithFeatures() {
+  return useQuery({
+    queryKey: [...businessKeys.plans(), 'with-features'],
+    queryFn: async () => {
+      const plans = await businessService.listPlans()
+      const detailed = await Promise.all(
+        plans.map(p => businessService.getPlanBySlug(p.slug))
+      )
+      return detailed
+    },
+    staleTime: 10 * 60_000,
+  })
+}
+
 // -------------------------------------------------------
 // Subscription Hooks
 // -------------------------------------------------------

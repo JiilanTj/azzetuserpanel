@@ -3,16 +3,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { createRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { authedLayout } from "./_authed";
+import { rootRoute } from "./__root";
+import { authMiddleware } from "@/middleware/auth.middleware";
 import { useCreateEntity, useCreateWorkspace } from "@/hooks/use-business";
 import { useWorkspaceStore } from "@/stores/workspace.store";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { PlusIcon } from "@radix-ui/react-icons";
+import logoSvg from "@/assets/logo.svg";
 
 export const workspacesNewRoute = createRoute({
-  getParentRoute: () => authedLayout,
+  getParentRoute: () => rootRoute,
   path: "/workspaces/new",
+  beforeLoad: authMiddleware.requireAuth,
   component: CreateWorkspacePage,
 });
 
@@ -88,7 +91,9 @@ function CreateWorkspacePage() {
     createEntityMutation.isPending || createWorkspaceMutation.isPending;
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
+    <div className="min-h-screen flex flex-col items-center bg-background px-6 py-12">
+      <img src={logoSvg} alt="Azzet" className="h-10 w-10 mb-8" />
+      <div className="w-full max-w-xl">
       <div className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight text-(--gray-12) mb-1.5">
           Buat Workspace Bisnis
@@ -201,6 +206,7 @@ function CreateWorkspacePage() {
           {isLoading ? "Membuat Workspace…" : "Buat Workspace"}
         </Button>
       </form>
+      </div>
     </div>
   );
 }

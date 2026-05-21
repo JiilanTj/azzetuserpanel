@@ -74,6 +74,16 @@ export const businessService = {
       .json<APIResponse<PlanResponse[]>>()
       .then(r => r.data),
 
+  /**
+   * GET /plans/{slug}
+   * Get a single plan with features. Public endpoint.
+   */
+  getPlanBySlug: (slug: string) =>
+    publicClient
+      .get(`plans/${slug}`)
+      .json<APIResponse<PlanResponse>>()
+      .then(r => r.data),
+
   // -------------------------------------------------------
   // Subscriptions (Workspace Scoped)
   // -------------------------------------------------------

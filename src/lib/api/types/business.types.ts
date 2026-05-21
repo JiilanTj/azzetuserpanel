@@ -95,6 +95,7 @@ export interface SubscriptionResponse {
   expires_at?: string
   trial_ends_at?: string
   cancelled_at?: string
+  payment_url?: string
   created_at: string
 }
 

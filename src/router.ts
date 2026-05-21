@@ -25,8 +25,12 @@ const routeTree = rootRoute.addChildren([
   forgotPasswordRoute,
   verifyEmailRoute,
   verifyWhatsappRoute,
+
+  // Onboarding routes — auth required but no app shell (sidebar/header)
   setupRoute,
   workspacesRoute,
+  workspacesNewRoute,
+  plansRoute,
 
   // Protected routes — wrapped in authed layout (auth guard + sidebar/header)
   authedLayout.addChildren([
@@ -34,9 +38,7 @@ const routeTree = rootRoute.addChildren([
     uiOverviewRoute,
     usersRoute,
     billingRoute,
-    plansRoute,
     settingsRoute,
-    workspacesNewRoute,
   ]),
 ])
 

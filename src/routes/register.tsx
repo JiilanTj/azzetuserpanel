@@ -15,6 +15,7 @@ import {
   Cross2Icon,
 } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui";
+import { WhatsAppInput } from "@/components/ui/whatsapp-input";
 import { cn } from "@/lib/utils";
 import { rootRoute } from "./__root";
 import { useRegister } from "@/hooks/use-auth";
@@ -497,26 +498,15 @@ function RegisterPage() {
 
             {/* WhatsApp Field */}
             {method === "whatsapp" && (
-              <div className="flex flex-col gap-1.5">
-                <label
-                  htmlFor="reg-whatsapp"
-                  className="text-sm font-medium text-(--gray-12)"
-                >
-                  Nomor WhatsApp
-                </label>
-                <input
-                  id="reg-whatsapp"
-                  type="tel"
-                  placeholder="+628123456789"
-                  {...register("whatsapp")}
-                  className={inputCls(!!errors.whatsapp)}
-                />
-                {errors.whatsapp && (
-                  <p className="text-xs text-red-500">
-                    {errors.whatsapp.message}
-                  </p>
-                )}
-              </div>
+              <WhatsAppInput
+                id="reg-whatsapp"
+                label="Nomor WhatsApp"
+                value={watch("whatsapp")}
+                onChange={(val) => setValue("whatsapp", val, { shouldValidate: true })}
+                error={!!errors.whatsapp}
+                errorMessage={errors.whatsapp?.message}
+                hint="Masukkan nomor setelah +62, contoh: 8123456789"
+              />
             )}
 
             {/* Password */}
