@@ -20,3 +20,30 @@ export const updateAccountSchema = z.object({
 })
 
 export type UpdateAccountFormValues = z.infer<typeof updateAccountSchema>
+
+export const ITEM_TYPES_TUPLE = ['BARANG', 'JASA'] as const;
+
+export const createItemSchema = z.object({
+  item_type: z.enum(ITEM_TYPES_TUPLE, {
+    message: 'Tipe item harus dipilih',
+  }),
+  name: z.string().min(1, 'Nama item wajib diisi').max(100, 'Nama item maksimal 100 karakter'),
+  description: z.string().max(255, 'Deskripsi maksimal 255 karakter').optional(),
+  unit: z.string().max(20, 'Satuan maksimal 20 karakter').optional(),
+  unit_price: z.string().min(1, 'Harga satuan wajib diisi'),
+  account_id: z.string().optional(),
+})
+
+export type CreateItemFormValues = z.infer<typeof createItemSchema>
+
+export const updateItemSchema = z.object({
+  item_type: z.enum(ITEM_TYPES_TUPLE).optional(),
+  name: z.string().min(1, 'Nama item wajib diisi').max(100, 'Nama item maksimal 100 karakter').optional(),
+  description: z.string().max(255, 'Deskripsi maksimal 255 karakter').optional(),
+  unit: z.string().max(20, 'Satuan maksimal 20 karakter').optional(),
+  unit_price: z.string().min(1, 'Harga satuan wajib diisi').optional(),
+  account_id: z.string().optional(),
+  is_active: z.boolean().optional(),
+})
+
+export type UpdateItemFormValues = z.infer<typeof updateItemSchema>

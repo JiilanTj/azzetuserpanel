@@ -102,7 +102,7 @@ Ini adalah porsi pekerjaan terbesar yang belum disentuh sama sekali di frontend.
 
 - [ ] **Halaman UI Baru:**
   - [x] `/accounts`: Halaman Chart of Accounts (COA) / Daftar Akun (List Selesai ✅, Modal Tambah/Edit Selesai ✅).
-  - `/items`: Halaman katalog produk & jasa (Barang, Jasa, Proyek, dll).
+  - [x] `/items`: Halaman katalog produk & jasa (Daftar Item & Modal Form Selesai ✅).
   - `/transactions`: Halaman jurnal & riwayat transaksi bisnis.
   - `/transactions/new`: Form pencatatan transaksi dual-mode (Mode **SIMPLE** untuk Kasir, Mode **ADVANCED** untuk Akuntan), terintegrasi dengan tombol bantuan AI Categorization.
   - `/transactions/{id}`: Halaman detail transaksi untuk melihat entri jurnal debit/kredit dan tombol **Void** (jurnal pembalik).
