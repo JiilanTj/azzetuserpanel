@@ -1,3 +1,4 @@
 export * from './shared.types'
 export * from './auth.types'
-export * from './business.types'
+export * from './workspace.types'
+export * from './subscription.types'

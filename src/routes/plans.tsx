@@ -1,7 +1,7 @@
 import { createRoute, useNavigate } from "@tanstack/react-router";
 import { rootRoute } from "./__root";
 import { authMiddleware } from "@/middleware/auth.middleware";
-import { usePlansWithFeatures, useSubscription, useSubscribe } from "@/hooks/use-business";
+import { usePlansWithFeatures, useSubscription, useSubscribe } from "@/hooks/use-subscription";
 import { useWorkspaceStore } from "@/stores/workspace.store";
 import { Button } from "@/components/ui";
 import { CheckIcon, Cross1Icon, RocketIcon } from "@radix-ui/react-icons";

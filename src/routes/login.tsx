@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { createRoute, useNavigate, Link } from "@tanstack/react-router";
@@ -163,12 +163,14 @@ function LoginPage() {
   const {
     handleSubmit: handleReqOtpSubmit,
     formState: { errors: we },
-    watch: watchOtp,
     setValue: setOtpValue,
+    control: otpControl,
   } = useForm<RequestOtpForm>({
     resolver: zodResolver(requestOtpSchema),
     defaultValues: { whatsapp: "" },
   });
+
+  const otpWhatsapp = useWatch({ control: otpControl, name: "whatsapp" });
 
   const {
     register: regVerifyOtp,
@@ -531,8 +533,10 @@ function LoginPage() {
               >
                 <WhatsAppInput
                   id="login-whatsapp"
-                  value={watchOtp("whatsapp")}
-                  onChange={(val) => setOtpValue("whatsapp", val, { shouldValidate: true })}
+                  value={otpWhatsapp}
+                  onChange={(val) =>
+                    setOtpValue("whatsapp", val, { shouldValidate: true })
+                  }
                   error={!!we.whatsapp}
                   errorMessage={we.whatsapp?.message}
                   hint="Masukkan nomor setelah +62, contoh: 8123456789"

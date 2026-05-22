@@ -87,7 +87,7 @@ export const apiClient = ky.create({
           const newToken = await doRefresh()
           const headers = new Headers(request.headers)
           headers.set('Authorization', `Bearer ${newToken}`)
-          return ky.retry({ request: new Request(request, { headers }), code: 'TOKEN_REFRESHED' })
+          return ky(new Request(request, { headers }))
         } catch {
           return response
         }

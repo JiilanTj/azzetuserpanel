@@ -4,7 +4,7 @@ import {
   useMembers,
   useUpdateMember,
   useRemoveMember,
-} from "@/hooks/use-business";
+} from "@/hooks/use-workspace";
 import { useWorkspaceStore } from "@/stores/workspace.store";
 import { Button, Badge } from "@/components/ui";
 import { cn } from "@/lib/utils";

@@ -13,9 +13,11 @@ import { useWorkspaceStore } from "@/stores/workspace.store";
 import {
   useSubscription,
   useInvoices,
+} from "@/hooks/use-subscription";
+import {
   useMembers,
   useWorkspaces,
-} from "@/hooks/use-business";
+} from "@/hooks/use-workspace";
 import { useMe } from "@/hooks/use-auth";
 import { Badge } from "@/components/ui";
 

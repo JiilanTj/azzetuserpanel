@@ -2,7 +2,7 @@ import { createRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { rootRoute } from './__root'
 import { authMiddleware } from '@/middleware/auth.middleware'
-import { businessService } from '@/lib/api/services'
+import { workspaceService } from '@/lib/api/services'
 import { Button } from '@/components/ui'
 import { CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons'
 import logoSvg from '@/assets/logo.svg'
@@ -19,19 +19,15 @@ type InviteStatus = 'loading' | 'success' | 'error'
 function InvitePage() {
   const navigate = useNavigate()
   const { token } = inviteRoute.useParams()
-  const [status, setStatus] = useState<InviteStatus>('loading')
-  const [message, setMessage] = useState('')
+  const [status, setStatus] = useState<InviteStatus>(() => token ? 'loading' : 'error')
+  const [message, setMessage] = useState(() => token ? '' : 'Token undangan tidak valid.')
 
   useEffect(() => {
-    if (!token) {
-      setStatus('error')
-      setMessage('Token undangan tidak valid.')
-      return
-    }
+    if (!token) return
 
     async function acceptInvite() {
       try {
-        const resp = await businessService.acceptInvite(token)
+        const resp = await workspaceService.acceptInvite(token)
         setStatus('success')
         setMessage(resp.message || 'Undangan berhasil diterima!')
       } catch (err: unknown) {

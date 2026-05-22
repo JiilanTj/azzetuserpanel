@@ -1,59 +1,14 @@
 // -------------------------------------------------------
-// Business/Multi-Tenant Types — Entities, Workspaces, Plans, Subscriptions
+// Subscription Domain Types — Plans, Subscriptions, Billing, Invoices, Payments
 // -------------------------------------------------------
 
-export type EntityType = 'ORANG_PRIBADI' | 'BADAN_USAHA'
-export type WorkspaceRole = string // Dynamic roles from ABAC system (e.g. "PEMILIK", "KARYAWAN", or custom role names)
 export type SubscriptionStatus = 'active' | 'trial' | 'expired' | 'cancelled' | 'pending_payment'
 export type InvoiceStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'refunded'
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'refunded'
-export type MemberStatus = 'ACTIVE' | 'INACTIVE'
 
-export interface EntityMetaResponse {
-  bidang_usaha?: string
-  logo_url?: string
-  website?: string
-  email?: string
-  description?: string
-}
-
-export interface EntityResponse {
-  id: string
-  user_id?: string
-  entity_type: EntityType
-  nama_utama: string
-  nik_npwp?: string
-  nomor_wa?: string
-  alamat_lengkap?: string
-  status: string
-  is_shadow: boolean
-  meta?: EntityMetaResponse
-  created_at: string
-  updated_at: string
-}
-
-export interface CreateEntityRequest {
-  entity_type: EntityType
-  nama_utama: string
-  nik_npwp?: string
-  nomor_wa?: string
-  alamat_lengkap?: string
-}
-
-export interface WorkspaceResponse {
-  id: string
-  entity_id: string
-  entity_name: string
-  entity_type: EntityType
-  role: WorkspaceRole
-  subscription_status?: SubscriptionStatus
-  plan_name?: string
-  created_at: string
-}
-
-export interface CreateWorkspaceRequest {
-  entity_id: string
-}
+// -------------------------------------------------------
+// Plans
+// -------------------------------------------------------
 
 export interface FeatureResponse {
   feature_key: string
@@ -79,6 +34,10 @@ export interface PlanResponse {
   created_at: string
   updated_at?: string
 }
+
+// -------------------------------------------------------
+// Subscriptions
+// -------------------------------------------------------
 
 export interface SubscribeRequest {
   plan_id: string
@@ -109,6 +68,10 @@ export interface UsageResponse {
   period_end: string
 }
 
+// -------------------------------------------------------
+// Billing & Payments
+// -------------------------------------------------------
+
 export interface InvoiceResponse {
   id: string
   workspace_id: string
@@ -138,25 +101,4 @@ export interface PaymentResponse {
   paid_at?: string
   expires_at?: string
   created_at: string
-}
-
-// -------------------------------------------------------
-// Workspace Members
-// -------------------------------------------------------
-
-export interface MemberResponse {
-  id: string
-  entity_id: string
-  entity_name: string
-  entity_type: EntityType
-  role?: WorkspaceRole
-  custom_alias?: string
-  relation_type: string
-  status: MemberStatus
-  created_at: string
-}
-
-export interface UpdateMemberRequest {
-  custom_alias?: string
-  status?: MemberStatus
 }

@@ -1,13 +1,14 @@
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { createRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { rootRoute } from "./__root";
 import { authMiddleware } from "@/middleware/auth.middleware";
-import { useCreateEntity, useCreateWorkspace } from "@/hooks/use-business";
+import { useCreateEntity, useCreateWorkspace } from "@/hooks/use-workspace";
 import { useWorkspaceStore } from "@/stores/workspace.store";
 import { Button } from "@/components/ui";
+import { WhatsAppInput } from "@/components/ui/whatsapp-input";
 import { cn } from "@/lib/utils";
 import { PlusIcon } from "@radix-ui/react-icons";
 import logoSvg from "@/assets/logo.svg";
@@ -45,6 +46,8 @@ function CreateWorkspacePage() {
   const {
     register,
     handleSubmit,
+    setValue,
+    control,
     formState: { errors },
   } = useForm<WorkspaceForm>({
     resolver: zodResolver(workspaceSchema),
@@ -56,25 +59,31 @@ function CreateWorkspacePage() {
     },
   });
 
+  const nomorWa = useWatch({ control, name: "nomor_wa" });
+
   const onSubmit = handleSubmit(async (data) => {
-    // 1. Create Business Entity
-    const entity = await createEntityMutation.mutateAsync({
-      entity_type: "BADAN_USAHA",
-      nama_utama: data.nama_utama,
-      nik_npwp: data.nik_npwp,
-      nomor_wa: data.nomor_wa,
-      alamat_lengkap: data.alamat_lengkap,
-    });
+    try {
+      // 1. Create Business Entity
+      const entity = await createEntityMutation.mutateAsync({
+        entity_type: "BADAN_USAHA",
+        nama_utama: data.nama_utama,
+        nik_npwp: data.nik_npwp,
+        nomor_wa: data.nomor_wa,
+        alamat_lengkap: data.alamat_lengkap,
+      });
 
-    // 2. Create Workspace linking to Entity
-    const workspace = await createWorkspaceMutation.mutateAsync({
-      entity_id: entity.id,
-    });
+      // 2. Create Workspace linking to Entity
+      const workspace = await createWorkspaceMutation.mutateAsync({
+        entity_id: entity.id,
+      });
 
-    // 3. Set Active Workspace & Navigate
-    setActiveWorkspace(workspace);
-    toast.success(`Workspace "${data.nama_utama}" berhasil dibuat!`);
-    navigate({ to: "/plans" });
+      // 3. Set Active Workspace & Navigate
+      setActiveWorkspace(workspace);
+      toast.success(`Workspace "${data.nama_utama}" berhasil dibuat!`);
+      navigate({ to: "/plans" });
+    } catch {
+      // Errors are already handled by mutation onError callbacks (toast)
+    }
   });
 
   const inputCls = (hasError: boolean) =>
@@ -148,23 +157,15 @@ function CreateWorkspacePage() {
         </div>
 
         {/* Whatsapp */}
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="whatsapp"
-            className="text-sm font-medium text-(--gray-12)"
-          >
-            Nomor WhatsApp Resmi Perusahaan
-          </label>
-          <input
-            id="whatsapp"
-            placeholder="+628111222333"
-            {...register("nomor_wa")}
-            className={inputCls(!!errors.nomor_wa)}
-          />
-          {errors.nomor_wa && (
-            <p className="text-xs text-red-500">{errors.nomor_wa.message}</p>
-          )}
-        </div>
+        <WhatsAppInput
+          id="whatsapp"
+          label="Nomor WhatsApp Resmi Perusahaan"
+          value={nomorWa}
+          onChange={(val) => setValue("nomor_wa", val, { shouldValidate: true })}
+          error={!!errors.nomor_wa}
+          errorMessage={errors.nomor_wa?.message}
+          hint="Masukkan nomor setelah +62, contoh: 8111222333"
+        />
 
         {/* Alamat Lengkap */}
         <div className="flex flex-col gap-1.5">

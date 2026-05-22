@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { createRoute, useNavigate, Link } from "@tanstack/react-router";
@@ -221,7 +221,7 @@ function RegisterPage() {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     formState: { errors },
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -235,8 +235,9 @@ function RegisterPage() {
     },
   });
 
-  const watchPassword = watch("password") ?? "";
-  const watchConfirmPassword = watch("confirm_password") ?? "";
+  const watchPassword = useWatch({ control, name: "password" }) ?? "";
+  const watchConfirmPassword = useWatch({ control, name: "confirm_password" }) ?? "";
+  const watchWhatsapp = useWatch({ control, name: "whatsapp" });
 
   const isPasswordValid =
     PASSWORD_RULES.every((r) => r.test(watchPassword)) &&
@@ -501,7 +502,7 @@ function RegisterPage() {
               <WhatsAppInput
                 id="reg-whatsapp"
                 label="Nomor WhatsApp"
-                value={watch("whatsapp")}
+                value={watchWhatsapp}
                 onChange={(val) => setValue("whatsapp", val, { shouldValidate: true })}
                 error={!!errors.whatsapp}
                 errorMessage={errors.whatsapp?.message}

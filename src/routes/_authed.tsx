@@ -5,7 +5,7 @@ import { authMiddleware } from "@/middleware/auth.middleware";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { useWorkspaceStore } from "@/stores/workspace.store";
-import { businessService } from "@/lib/api/services";
+import { subscriptionService } from "@/lib/api/services";
 import type { SubscriptionResponse } from "@/lib/api/types";
 import { ExclamationTriangleIcon, Cross2Icon } from "@radix-ui/react-icons";
 
@@ -62,7 +62,7 @@ function AuthedLayout() {
 
     async function fetchSubscription() {
       try {
-        const sub = await businessService.getSubscription(workspace.entity_id);
+        const sub = await subscriptionService.getSubscription(workspace.entity_id);
         if (cancelled) return;
         setSubscription(sub);
 

@@ -4,7 +4,7 @@ import {
   useInvoices,
   usePayInvoice,
   useSubscription,
-} from "@/hooks/use-business";
+} from "@/hooks/use-subscription";
 import { useWorkspaceStore } from "@/stores/workspace.store";
 import { Button, Badge } from "@/components/ui";
 import { cn, formatIDR } from "@/lib/utils";
