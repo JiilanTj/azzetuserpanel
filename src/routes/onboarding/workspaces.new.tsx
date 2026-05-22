@@ -1,6 +1,6 @@
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
+import { workspaceSchema, type WorkspaceFormValues as WorkspaceForm } from "@/lib/validations";
 import { createRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { rootRoute } from "../__root";
@@ -20,22 +20,7 @@ export const workspacesNewRoute = createRoute({
   component: CreateWorkspacePage,
 });
 
-const workspaceSchema = z.object({
-  nama_utama: z.string().min(3, "Nama badan usaha minimal 3 karakter."),
-  nik_npwp: z
-    .string()
-    .min(15, "NIK / NPWP minimal 15 digit angka.")
-    .regex(/^\d+$/, "Hanya angka."),
-  nomor_wa: z
-    .string()
-    .regex(
-      /^\+62\d{9,13}$/,
-      "Format nomor WhatsApp tidak valid. Harus diawali +62.",
-    ),
-  alamat_lengkap: z.string().min(10, "Alamat lengkap minimal 10 karakter."),
-});
-
-type WorkspaceForm = z.infer<typeof workspaceSchema>;
+// schemas imported from @/lib/validations
 
 function CreateWorkspacePage() {
   const navigate = useNavigate();

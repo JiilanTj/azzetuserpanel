@@ -1,7 +1,12 @@
 import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
+import {
+  inviteSchema,
+  roleSchema,
+  type InviteFormValues,
+  type RoleFormValues,
+} from "@/lib/validations";
 import { createRoute } from "@tanstack/react-router";
 import { authedLayout } from "./_authed";
 import {
@@ -62,20 +67,7 @@ const statusConfig: Record<
   INACTIVE: { label: "Nonaktif", variant: "gray" },
 };
 
-const inviteSchema = z.object({
-  email: z.string().min(1, "Email wajib diisi.").email("Format email tidak valid."),
-  role_id: z.string().min(1, "Pilih role untuk anggota baru."),
-});
-
-type InviteFormValues = z.infer<typeof inviteSchema>;
-
-const roleSchema = z.object({
-  name: z.string().min(1, "Nama role wajib diisi."),
-  description: z.string().optional(),
-  permissions: z.array(z.string()).min(1, "Pilih minimal satu permission."),
-});
-
-type RoleFormValues = z.infer<typeof roleSchema>;
+// schemas imported from @/lib/validations
 
 const AVAILABLE_PERMISSIONS = [
   { value: "transaction:create", label: "Buat Transaksi" },
@@ -130,7 +122,7 @@ function MembersTabContent() {
   const removeMutation = useRemoveMember(activeWorkspace?.entity_id);
   const assignRoleMutation = useAssignRole(activeWorkspace?.entity_id);
 
-  const [selectedMember, setSelectedMember] = useState<any | null>(null);
+  const [selectedMember, setSelectedMember] = useState<{ id: string; custom_alias?: string; entity_name?: string } | null>(null);
   const [roleId, setRoleId] = useState<string>("");
 
   const handleToggleStatus = async (memberId: string, currentStatus: MemberStatus) => {
@@ -153,7 +145,7 @@ function MembersTabContent() {
       });
       setSelectedMember(null);
       setRoleId("");
-    } catch (err) {
+    } catch {
       // Handled in mutation
     }
   };
@@ -393,7 +385,7 @@ function InvitesSection() {
     try {
       await createInviteMutation.mutateAsync(data);
       reset();
-    } catch (err) {
+    } catch {
       // Handled in mutation
     }
   });
@@ -402,7 +394,7 @@ function InvitesSection() {
     if (!confirm("Yakin ingin membatalkan undangan ini?")) return;
     try {
       await revokeInviteMutation.mutateAsync(id);
-    } catch (err) {
+    } catch {
       // Handled in mutation
     }
   };
@@ -565,13 +557,13 @@ function RolesSection() {
   const deleteRoleMutation = useDeleteRole(activeWorkspace?.entity_id);
   const updateRoleMutation = useUpdateRole(activeWorkspace?.entity_id);
   const [isOpen, setIsOpen] = useState(false);
-  const [editingRole, setEditingRole] = useState<any | null>(null);
+  const [editingRole, setEditingRole] = useState<{ id: string; name: string; description?: string; permissions: string[] } | null>(null);
 
   const {
     register,
     handleSubmit,
     setValue,
-    watch,
+    control,
     reset,
     formState: { errors },
   } = useForm<RoleFormValues>({
@@ -583,7 +575,7 @@ function RolesSection() {
     },
   });
 
-  const selectedPermissions = watch("permissions") || [];
+  const selectedPermissions = useWatch({ control, name: "permissions" }) || [];
 
   const handleCheckboxChange = (perm: string, checked: boolean) => {
     if (checked) {
@@ -610,7 +602,7 @@ function RolesSection() {
       setIsOpen(false);
       setEditingRole(null);
       reset();
-    } catch (err) {
+    } catch {
       // Handled in mutation
     }
   });
@@ -619,12 +611,12 @@ function RolesSection() {
     if (!confirm("Yakin ingin menghapus role kustom ini? Anggota yang memiliki role ini harus di-assign ke role lain.")) return;
     try {
       await deleteRoleMutation.mutateAsync(roleId);
-    } catch (err) {
+    } catch {
       // Handled in mutation
     }
   };
 
-  const handleEditClick = (role: any) => {
+  const handleEditClick = (role: { id: string; name: string; description?: string; permissions: string[] }) => {
     setEditingRole(role);
     reset({
       name: role.name,

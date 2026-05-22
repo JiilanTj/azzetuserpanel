@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
+import {
+  passwordSchema,
+  entityProfileSchema,
+  type PasswordForm,
+  type EntityProfileForm,
+} from "@/lib/validations";
 import { createRoute } from "@tanstack/react-router";
 import { authedLayout } from "./_authed";
 import {
@@ -17,6 +22,7 @@ import {
   useUpdateEntity,
   useUpdateEntityMeta,
 } from "@/hooks/use-workspace";
+import type { WorkspaceResponse } from "@/lib/api/types";
 import { Button, Badge, Input, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import {
@@ -37,33 +43,7 @@ export const settingsRoute = createRoute({
   component: SettingsPage,
 });
 
-// ---- Password Change Schema ----
-const passwordSchema = z
-  .object({
-    old_password: z.string().min(1, "Password lama wajib diisi."),
-    new_password: z.string().min(8, "Password baru minimal 8 karakter."),
-    confirm_password: z.string().min(1, "Konfirmasi password wajib diisi."),
-  })
-  .refine((data) => data.new_password === data.confirm_password, {
-    message: "Konfirmasi password tidak cocok.",
-    path: ["confirm_password"],
-  });
-
-type PasswordForm = z.infer<typeof passwordSchema>;
-
-// ---- Entity Profile Schema ----
-const entityProfileSchema = z.object({
-  nama_utama: z.string().min(1, "Nama bisnis wajib diisi."),
-  nomor_wa: z.string().optional(),
-  nik_npwp: z.string().optional(),
-  alamat_lengkap: z.string().optional(),
-  bidang_usaha: z.string().optional(),
-  email: z.string().email("Format email tidak valid.").or(z.literal("")),
-  website: z.string().optional(),
-  description: z.string().optional(),
-});
-
-type EntityProfileForm = z.infer<typeof entityProfileSchema>;
+// schemas imported from @/lib/validations
 
 function SettingsPage() {
   const { activeWorkspace } = useWorkspaceStore();
@@ -396,7 +376,7 @@ function SessionsSection() {
 }
 
 // ---- Entity Profile Section ----
-function EntityProfileSection({ workspace }: { workspace: any }) {
+function EntityProfileSection({ workspace }: { workspace: WorkspaceResponse }) {
   const { data: entity, isLoading } = useEntity(workspace.entity_id);
   const updateEntityMutation = useUpdateEntity();
   const updateEntityMetaMutation = useUpdateEntityMeta();
@@ -458,7 +438,7 @@ function EntityProfileSection({ workspace }: { workspace: any }) {
           },
         }),
       ]);
-    } catch (err) {
+    } catch {
       // Error is handled in the mutations
     }
   });

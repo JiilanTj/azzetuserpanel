@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
+import {
+  requestSchema,
+  resetSchema,
+  type RequestForm,
+  type ResetForm,
+} from "@/lib/validations";
 import { createRoute, useNavigate, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -22,25 +27,7 @@ export const forgotPasswordRoute = createRoute({
   component: ForgotPasswordPage,
 });
 
-const requestSchema = z.object({
-  whatsapp: z
-    .string()
-    .regex(
-      /^\+62\d{9,13}$/,
-      "Format nomor WhatsApp tidak valid. Harus diawali +62.",
-    ),
-});
-
-const resetSchema = z.object({
-  otp: z
-    .string()
-    .length(6, "Kode OTP harus berisi 6 digit angka.")
-    .regex(/^\d+$/, "Hanya angka."),
-  new_password: z.string().min(8, "Password baru minimal 8 karakter."),
-});
-
-type RequestForm = z.infer<typeof requestSchema>;
-type ResetForm = z.infer<typeof resetSchema>;
+// schemas imported from @/lib/validations
 
 type Step = "request" | "reset";
 
@@ -68,7 +55,7 @@ function ForgotPasswordPage() {
     formState: { errors: re },
   } = useForm<RequestForm>({
     resolver: zodResolver(requestSchema),
-    defaultValues: { whatsapp: "" },
+    defaultValues: { identifier: "" },
   });
 
   const {
@@ -78,18 +65,18 @@ function ForgotPasswordPage() {
     reset: resetResetForm,
   } = useForm<ResetForm>({
     resolver: zodResolver(resetSchema),
-    defaultValues: { otp: "", new_password: "" },
+    defaultValues: { token: "", new_password: "", confirm_password: "" },
   });
 
   const onRequestSubmit = handleReqSubmit(async (data) => {
     await requestOtpMutation.mutateAsync(
       {
-        whatsapp: data.whatsapp,
+        whatsapp: data.identifier,
         purpose: "reset_password",
       },
       {
         onSuccess: () => {
-          setSavedWhatsapp(data.whatsapp);
+          setSavedWhatsapp(data.identifier);
           setStep("reset");
           setTimeLeft(300); // 5 minutes
           resetResetForm();
@@ -102,7 +89,7 @@ function ForgotPasswordPage() {
     await resetPasswordMutation.mutateAsync(
       {
         identifier: savedWhatsapp,
-        otp: data.otp,
+        otp: data.token,
         new_password: data.new_password,
       },
       {
@@ -175,11 +162,11 @@ function ForgotPasswordPage() {
                 id="reset-whatsapp"
                 type="tel"
                 placeholder="+628123456789"
-                {...regReq("whatsapp")}
-                className={inputCls(!!re.whatsapp)}
+                {...regReq("identifier")}
+                className={inputCls(!!re.identifier)}
               />
-              {re.whatsapp && (
-                <p className="text-xs text-red-500">{re.whatsapp.message}</p>
+              {re.identifier && (
+                <p className="text-xs text-red-500">{re.identifier.message}</p>
               )}
             </div>
 
@@ -220,14 +207,14 @@ function ForgotPasswordPage() {
                 inputMode="numeric"
                 maxLength={6}
                 placeholder="000000"
-                {...regReset("otp")}
+                {...regReset("token")}
                 className={cn(
-                  inputCls(!!rse.otp),
+                  inputCls(!!rse.token),
                   "text-center text-xl font-bold tracking-[0.5em] h-12",
                 )}
               />
-              {rse.otp && (
-                <p className="text-xs text-red-500">{rse.otp.message}</p>
+              {rse.token && (
+                <p className="text-xs text-red-500">{rse.token.message}</p>
               )}
             </div>
 

@@ -392,7 +392,7 @@ export function useUpdateRole(workspaceId?: string) {
 
 export function useCounterparties(workspaceId?: string) {
   return useQuery({
-    queryKey: [...workspaceKeys.all(workspaceId!), 'counterparties'],
+    queryKey: [...workspaceKeys.all, workspaceId, 'counterparties'],
     queryFn: () => workspaceService.listCounterparties(workspaceId!),
     enabled: !!workspaceId,
   })
@@ -404,7 +404,7 @@ export function useAddCounterparty(workspaceId?: string) {
     mutationFn: (body: AddCounterpartyRequest) => workspaceService.addCounterparty(workspaceId!, body),
     onSuccess: () => {
       if (workspaceId) {
-        qc.invalidateQueries({ queryKey: [...workspaceKeys.all(workspaceId), 'counterparties'] })
+        qc.invalidateQueries({ queryKey: [...workspaceKeys.all, workspaceId, 'counterparties'] })
       }
       toast.success('Pihak ketiga (Counterparty) berhasil ditambahkan.')
     },

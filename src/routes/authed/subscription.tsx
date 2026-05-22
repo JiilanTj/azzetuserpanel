@@ -23,12 +23,10 @@ import {
 } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import {
-  LightningBoltIcon,
   CrossCircledIcon,
   UpdateIcon,
   BarChartIcon,
   FileTextIcon,
-  CheckCircledIcon,
 } from "@radix-ui/react-icons";
 
 export const subscriptionRoute = createRoute({
@@ -255,7 +253,7 @@ function CancelSubscriptionDialog() {
     try {
       await cancelMutation.mutateAsync();
       setOpen(false);
-    } catch (err) {
+    } catch {
       // toast already handled
     }
   };

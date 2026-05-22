@@ -88,9 +88,6 @@ export interface UpdateEntityMetaRequest {
   description?: string
 }
 
-export interface MessageResponse {
-  message: string
-}
 
 export interface InviteResponse {
   id: string

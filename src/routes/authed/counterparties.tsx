@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { createRoute } from "@tanstack/react-router";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
-import { authedLayout } from "./_authed";
+import {
+  searchCounterpartySchema,
+  manualCounterpartySchema,
+  type SearchFormValues,
+  type ManualFormValues,
+} from "@/lib/validations";
 import { useWorkspaceStore } from "@/stores/workspace.store";
 import {
   useCounterparties,
@@ -45,23 +49,8 @@ export const counterpartiesRoute = createRoute({
   component: CounterpartiesPage,
 });
 
-const searchSchema = z.object({
-  relation_type: z.enum(["PELANGGAN", "VENDOR"], { message: "Pilih tipe relasi" }),
-  entity_id: z.string().min(1, "Pilih entitas"),
-  custom_alias: z.string().optional(),
-});
-
-const manualSchema = z.object({
-  relation_type: z.enum(["PELANGGAN", "VENDOR"], { message: "Pilih tipe relasi" }),
-  entity_type: z.enum(["ORANG_PRIBADI", "BADAN_USAHA"], { message: "Pilih tipe entitas" }),
-  nama_utama: z.string().min(1, "Nama wajib diisi"),
-  nik_npwp: z.string().optional(),
-  nomor_wa: z.string().optional(),
-  custom_alias: z.string().optional(),
-});
-
-type SearchFormValues = z.infer<typeof searchSchema>;
-type ManualFormValues = z.infer<typeof manualSchema>;
+import { authedLayout } from "./_authed";
+// schemas imported from @/lib/validations
 
 function CounterpartiesPage() {
   const { activeWorkspace } = useWorkspaceStore();
@@ -250,7 +239,7 @@ function AddCounterpartyDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="mt-2">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "search" | "manual")} className="mt-2">
           <TabsList className="w-full grid grid-cols-2">
             <TabsTrigger value="search">Cari Entitas Azzet</TabsTrigger>
             <TabsTrigger value="manual">Buat Entitas Baru (Manual)</TabsTrigger>
@@ -275,7 +264,7 @@ function AddCounterpartyDialog({
   );
 }
 
-function SearchCounterpartyForm({ onSuccess, mutation }: any) {
+function SearchCounterpartyForm({ onSuccess, mutation }: { onSuccess: () => void; mutation: ReturnType<typeof useAddCounterparty> }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
 
@@ -292,8 +281,8 @@ function SearchCounterpartyForm({ onSuccess, mutation }: any) {
     debouncedQuery.length > 2
   );
 
-  const { register, handleSubmit, control, setValue, watch, formState: { errors } } = useForm<SearchFormValues>({
-    resolver: zodResolver(searchSchema),
+  const { register, handleSubmit, control, setValue, formState: { errors } } = useForm<SearchFormValues>({
+    resolver: zodResolver(searchCounterpartySchema),
     defaultValues: {
       relation_type: "PELANGGAN",
       entity_id: "",
@@ -301,7 +290,7 @@ function SearchCounterpartyForm({ onSuccess, mutation }: any) {
     }
   });
 
-  const selectedEntityId = watch("entity_id");
+  const selectedEntityId = useWatch({ control, name: "entity_id" });
 
   const onSubmit = handleSubmit(async (data) => {
     try {
@@ -311,7 +300,7 @@ function SearchCounterpartyForm({ onSuccess, mutation }: any) {
         custom_alias: data.custom_alias || undefined,
       });
       onSuccess();
-    } catch (err) {
+    } catch {
       // Handled in mutation
     }
   });
@@ -413,9 +402,9 @@ function SearchCounterpartyForm({ onSuccess, mutation }: any) {
   );
 }
 
-function ManualCounterpartyForm({ onSuccess, mutation }: any) {
+function ManualCounterpartyForm({ onSuccess, mutation }: { onSuccess: () => void; mutation: ReturnType<typeof useAddCounterparty> }) {
   const { register, handleSubmit, control, formState: { errors } } = useForm<ManualFormValues>({
-    resolver: zodResolver(manualSchema),
+    resolver: zodResolver(manualCounterpartySchema),
     defaultValues: {
       relation_type: "PELANGGAN",
       entity_type: "BADAN_USAHA",
@@ -430,7 +419,7 @@ function ManualCounterpartyForm({ onSuccess, mutation }: any) {
     try {
       await mutation.mutateAsync(data);
       onSuccess();
-    } catch (err) {
+    } catch {
       // Handled in mutation
     }
   });

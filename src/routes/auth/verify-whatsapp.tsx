@@ -1,6 +1,10 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
+import {
+  verifySearchSchema,
+  verifyOtpSchema,
+  type VerifyOtpForm,
+} from "@/lib/validations";
 import { createRoute, useNavigate, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ArrowRightIcon, MobileIcon } from "@radix-ui/react-icons";
@@ -10,9 +14,7 @@ import { rootRoute } from "../__root";
 import { useVerifyOTP } from "@/hooks/use-auth";
 import logoSvg from "@/assets/logo.svg";
 
-const verifySearchSchema = z.object({
-  identifier: z.string().default(""),
-});
+// schemas imported from @/lib/validations
 
 export const verifyWhatsappRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -21,20 +23,7 @@ export const verifyWhatsappRoute = createRoute({
   component: VerifyWhatsappPage,
 });
 
-const verifyOtpSchema = z.object({
-  identifier: z
-    .string()
-    .regex(
-      /^\+62\d{9,13}$/,
-      "Format nomor WhatsApp tidak valid. Harus diawali +62.",
-    ),
-  otp: z
-    .string()
-    .length(6, "Kode OTP harus berisi 6 digit angka.")
-    .regex(/^\d+$/, "Hanya angka."),
-});
-
-type VerifyOtpForm = z.infer<typeof verifyOtpSchema>;
+// form types imported from @/lib/validations
 
 function VerifyWhatsappPage() {
   const navigate = useNavigate();

@@ -1,7 +1,14 @@
 import { useState, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
+import {
+  loginEmailSchema,
+  requestOtpSchema,
+  verifyOtpSchema,
+  type LoginEmailForm,
+  type RequestOtpForm,
+  type VerifyOtpForm,
+} from "@/lib/validations";
 import { createRoute, useNavigate, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -30,32 +37,7 @@ export const loginRoute = createRoute({
   component: LoginPage,
 });
 
-// ---- Zod schemas -----------------------------------------------
-
-const loginEmailSchema = z.object({
-  email: z.string().email("Format email tidak valid."),
-  password: z.string().min(8, "Password minimal 8 karakter."),
-});
-
-const requestOtpSchema = z.object({
-  whatsapp: z
-    .string()
-    .regex(
-      /^\+62\d{9,13}$/,
-      "Format nomor WhatsApp tidak valid. Harus diawali +62.",
-    ),
-});
-
-const verifyOtpSchema = z.object({
-  otp: z
-    .string()
-    .length(6, "Kode OTP harus berisi 6 digit angka.")
-    .regex(/^\d+$/, "Hanya angka."),
-});
-
-type LoginEmailForm = z.infer<typeof loginEmailSchema>;
-type RequestOtpForm = z.infer<typeof requestOtpSchema>;
-type VerifyOtpForm = z.infer<typeof verifyOtpSchema>;
+// ---- Zod schemas imported from @/lib/validations -----------------
 
 type Method = "email" | "whatsapp";
 type Step = "request-otp" | "verify-otp";

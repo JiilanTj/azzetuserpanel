@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod/v4";
+import { registerSchema, type RegisterForm } from "@/lib/validations";
 import { createRoute, useNavigate, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import {
@@ -29,27 +29,7 @@ export const registerRoute = createRoute({
   component: RegisterPage,
 });
 
-// ---- Zod schema -----------------------------------------------
-
-const registerSchema = z.object({
-  name: z.string().min(2, "Nama harus berisi minimal 2 karakter."),
-  method: z.enum(["email", "whatsapp"]),
-  email: z
-    .string()
-    .refine((v) => v === "" || z.string().email().safeParse(v).success, {
-      message: "Format email tidak valid.",
-    }),
-  whatsapp: z
-    .string()
-    .refine(
-      (v) => v === "" || /^\+62\d{9,13}$/.test(v),
-      "Format nomor WhatsApp tidak valid. Harus diawali +62.",
-    ),
-  password: z.string().min(8, "Password minimal 8 karakter."),
-  confirm_password: z.string().min(1, "Konfirmasi password wajib diisi."),
-});
-
-type RegisterForm = z.infer<typeof registerSchema>;
+// ---- Zod schemas imported from @/lib/validations -----------------
 
 // ---- Left-panel metric card ------------------------------------
 
