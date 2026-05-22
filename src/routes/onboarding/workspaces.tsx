@@ -1,5 +1,5 @@
 import { createRoute, useNavigate } from '@tanstack/react-router'
-import { rootRoute } from './__root'
+import { rootRoute } from '../__root'
 import { authMiddleware } from '@/middleware/auth.middleware'
 import { useWorkspaces } from '@/hooks/use-workspace'
 import { useWorkspaceStore } from '@/stores/workspace.store'

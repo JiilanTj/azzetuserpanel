@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
 import { createRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { rootRoute } from "./__root";
+import { rootRoute } from "../__root";
 import { authMiddleware } from "@/middleware/auth.middleware";
 import { useCreateEntity, useCreateWorkspace } from "@/hooks/use-workspace";
 import { useWorkspaceStore } from "@/stores/workspace.store";

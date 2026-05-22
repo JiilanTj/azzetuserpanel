@@ -1,6 +1,6 @@
 import { createRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
-import { rootRoute } from './__root'
+import { rootRoute } from '../__root'
 import { authMiddleware } from '@/middleware/auth.middleware'
 import { workspaceService } from '@/lib/api/services'
 import { Button } from '@/components/ui'

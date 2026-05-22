@@ -12,7 +12,7 @@ import {
 } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
-import { rootRoute } from "./__root";
+import { rootRoute } from "../__root";
 import { useRequestOTP, useResetPassword } from "@/hooks/use-auth";
 import logoSvg from "@/assets/logo.svg";
 

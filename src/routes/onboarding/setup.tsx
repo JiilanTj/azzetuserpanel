@@ -1,6 +1,6 @@
 import { createRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
-import { rootRoute } from './__root'
+import { rootRoute } from '../__root'
 import { authMiddleware } from '@/middleware/auth.middleware'
 import logoSvg from '@/assets/logo.svg'
 

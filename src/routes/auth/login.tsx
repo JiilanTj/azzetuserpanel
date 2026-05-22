@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui";
 import { WhatsAppInput } from "@/components/ui/whatsapp-input";
 import { cn } from "@/lib/utils";
-import { rootRoute } from "./__root";
+import { rootRoute } from "../__root";
 import { useLoginEmail, useLoginOTP, useRequestOTP } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { authMiddleware } from "@/middleware/auth.middleware";

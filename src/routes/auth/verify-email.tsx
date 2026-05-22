@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { ArrowRightIcon, EnvelopeClosedIcon } from "@radix-ui/react-icons";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
-import { rootRoute } from "./__root";
+import { rootRoute } from "../__root";
 import { useVerifyOTP } from "@/hooks/use-auth";
 import logoSvg from "@/assets/logo.svg";
 

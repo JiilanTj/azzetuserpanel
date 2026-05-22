@@ -1,6 +1,6 @@
 import { createRoute, Outlet, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { rootRoute } from "./__root";
+import { rootRoute } from "../__root";
 import { authMiddleware } from "@/middleware/auth.middleware";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";

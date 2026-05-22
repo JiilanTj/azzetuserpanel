@@ -1,5 +1,5 @@
 import { createRoute, useNavigate } from '@tanstack/react-router'
-import { rootRoute } from './__root'
+import { rootRoute } from '../__root'
 import { Button } from '@/components/ui'
 import { CrossCircledIcon } from '@radix-ui/react-icons'
 import logoSvg from '@/assets/logo.svg'
