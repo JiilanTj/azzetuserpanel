@@ -75,33 +75,33 @@ Mengelola pembatalan atau pergantian paket langganan secara mandiri.
 
 ### 6. Accounting Module (Phase 7 - Modul Utama)
 Ini adalah porsi pekerjaan terbesar yang belum disentuh sama sekali di frontend.
-- [ ] **API Service Baru (`accounting.service.ts`):**
+- [x] **API Service Baru (`accounting.service.ts`):**
   - **Chart of Accounts (COA):**
-    - `GET /api/v1/accounts` (Ambil daftar akun).
-    - `POST /api/v1/accounts` (Tambah akun custom).
-    - `GET /api/v1/accounts/{id}` (Detail akun).
-    - `PATCH /api/v1/accounts/{id}` (Ubah nama/nomor akun custom).
+    - [x] `GET /api/v1/accounts` (Ambil daftar akun).
+    - [x] `POST /api/v1/accounts` (Tambah akun custom).
+    - [x] `GET /api/v1/accounts/{id}` (Detail akun).
+    - [x] `PATCH /api/v1/accounts/{id}` (Ubah nama/nomor akun custom).
   - **Barang & Jasa (Items):**
-    - `GET /api/v1/items` (Ambil daftar barang/jasa).
-    - `POST /api/v1/items` (Buat barang/jasa baru).
-    - `GET /api/v1/items/{id}` (Detail barang/jasa).
-    - `PATCH /api/v1/items/{id}` (Edit barang/jasa).
-    - `DELETE /api/v1/items/{id}` (Soft-delete barang/jasa).
+    - [x] `GET /api/v1/items` (Ambil daftar barang/jasa).
+    - [x] `POST /api/v1/items` (Buat barang/jasa baru).
+    - [x] `GET /api/v1/items/{id}` (Detail barang/jasa).
+    - [x] `PATCH /api/v1/items/{id}` (Edit barang/jasa).
+    - [x] `DELETE /api/v1/items/{id}` (Soft-delete barang/jasa).
   - **Transaksi (Transactions):**
-    - `GET /api/v1/transactions` (List transaksi).
-    - `POST /api/v1/transactions` (Buat transaksi baru).
-    - `POST /api/v1/transactions/categorize` (AI suggestion kategori).
-    - `GET /api/v1/transactions/{id}` (Detail transaksi & jurnalnya).
-    - `POST /api/v1/transactions/{id}/void` (Proses Void / Jurnal Pembalik).
+    - [x] `GET /api/v1/transactions` (List transaksi).
+    - [x] `POST /api/v1/transactions` (Buat transaksi baru).
+    - [x] `POST /api/v1/transactions/categorize` (AI suggestion kategori).
+    - [x] `GET /api/v1/transactions/{id}` (Detail transaksi & jurnalnya).
+    - [x] `POST /api/v1/transactions/{id}/void` (Proses Void / Jurnal Pembalik).
   - **Laporan Keuangan (Reports):**
-    - `GET /api/v1/reports/trial-balance` (Neraca Saldo).
-    - `GET /api/v1/reports/balance-sheet` (Neraca).
-    - `GET /api/v1/reports/income-statement` (Laba Rugi).
-    - `GET /api/v1/reports/cash-flow` (Arus Kas).
-    - `GET /api/v1/reports/ledger/{account_id}` (Buku Besar per akun).
+    - [x] `GET /api/v1/reports/trial-balance` (Neraca Saldo).
+    - [x] `GET /api/v1/reports/balance-sheet` (Neraca).
+    - [x] `GET /api/v1/reports/income-statement` (Laba Rugi).
+    - [x] `GET /api/v1/reports/cash-flow` (Arus Kas).
+    - [x] `GET /api/v1/reports/ledger/{account_id}` (Buku Besar per akun).
 
 - [ ] **Halaman UI Baru:**
-  - `/accounts`: Halaman Chart of Accounts (COA) / Daftar Akun.
+  - [x] `/accounts`: Halaman Chart of Accounts (COA) / Daftar Akun (List Selesai ✅, Modal Tambah/Edit Selesai ✅).
   - `/items`: Halaman katalog produk & jasa (Barang, Jasa, Proyek, dll).
   - `/transactions`: Halaman jurnal & riwayat transaksi bisnis.
   - `/transactions/new`: Form pencatatan transaksi dual-mode (Mode **SIMPLE** untuk Kasir, Mode **ADVANCED** untuk Akuntan), terintegrasi dengan tombol bantuan AI Categorization.

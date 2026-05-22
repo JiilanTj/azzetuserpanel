@@ -3,8 +3,29 @@ import { createRoute } from '@tanstack/react-router'
 import { authedLayout } from '../_authed'
 import { useWorkspaceStore } from '@/stores/workspace.store'
 import { useAccounts } from '@/hooks/use-accounting'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { useForm, Controller, type UseFormRegister, type Control } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Button,
+  Badge,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  Input,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui'
+import {
+  createAccountSchema,
+  updateAccountSchema,
+  type CreateAccountFormValues,
+  type UpdateAccountFormValues,
+} from '@/lib/validations'
 import {
   ChevronRightIcon,
   ChevronDownIcon,
@@ -12,7 +33,8 @@ import {
   Pencil1Icon,
   TrashIcon,
 } from '@radix-ui/react-icons'
-import type { AccountResponse, AccountType } from '@/lib/api/types/accounting.types'
+import type { AccountResponse, AccountType, CreateAccountRequest } from '@/lib/api/types/accounting.types'
+import { useCreateAccount, useUpdateAccount } from '@/hooks/use-accounting'
 
 // Types
 type TreeNode = AccountResponse & { children: TreeNode[] }
@@ -83,6 +105,20 @@ function AccountsPage() {
   )
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
 
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingAccount, setEditingAccount] = useState<AccountResponse | null>(null)
+
+  const handleOpenCreate = () => {
+    setEditingAccount(null)
+    setIsModalOpen(true)
+  }
+
+  const handleOpenEdit = (acc: AccountResponse) => {
+    setEditingAccount(acc)
+    setIsModalOpen(true)
+  }
+
   const roots = useMemo(() => buildTree(accountsData || []), [accountsData])
 
   const toggleType = (type: AccountType) => {
@@ -132,7 +168,7 @@ function AccountsPage() {
         <div className="flex gap-2">
           <Button variant="outline" onClick={collapseAll}>Collapse All</Button>
           <Button variant="outline" onClick={expandAll}>Expand All</Button>
-          <Button variant="solid">
+          <Button variant="solid" onClick={handleOpenCreate}>
             <PlusIcon className="mr-2" />
             Tambah Akun
           </Button>
@@ -200,7 +236,11 @@ function AccountsPage() {
                     </td>
                     <td className="py-2.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" className="h-7 w-7 p-0 text-(--gray-11)">
+                        <Button 
+                          variant="ghost" 
+                          className="h-7 w-7 p-0 text-(--gray-11)"
+                          onClick={(e) => { e.stopPropagation(); handleOpenEdit(node); }}
+                        >
                           <Pencil1Icon className="h-3.5 w-3.5" />
                         </Button>
                         {!node.is_system && (
@@ -225,6 +265,232 @@ function AccountsPage() {
           </tbody>
         </table>
       </div>
+
+      <AccountFormModal 
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        editingAccount={editingAccount}
+        accounts={accountsData || []}
+        workspaceId={activeWorkspace?.id}
+      />
     </div>
   )
 }
+
+function AccountFormModal({
+  isOpen,
+  onOpenChange,
+  editingAccount,
+  accounts,
+  workspaceId,
+}: {
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  editingAccount: AccountResponse | null
+  accounts: AccountResponse[]
+  workspaceId?: string
+}) {
+  const isEditing = !!editingAccount
+  const createMutation = useCreateAccount(workspaceId)
+  const updateMutation = useUpdateAccount(workspaceId)
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm<CreateAccountFormValues | UpdateAccountFormValues>({
+    resolver: zodResolver(isEditing ? updateAccountSchema : createAccountSchema),
+    defaultValues: {
+      account_type: 'ASSET',
+      code: '',
+      name: '',
+      parent_id: '',
+    },
+  })
+
+  const formErrors = errors as Record<string, { message?: string }>
+  const registerCreate = register as unknown as UseFormRegister<CreateAccountFormValues>
+  const controlCreate = control as unknown as Control<CreateAccountFormValues>
+
+  // Reset form when modal opens or editingAccount changes
+  React.useEffect(() => {
+    if (isOpen) {
+      if (editingAccount) {
+        reset({
+          name: editingAccount.name,
+          is_active: editingAccount.is_active,
+          parent_id: editingAccount.parent_id || '',
+        })
+      } else {
+        reset({
+          account_type: 'ASSET',
+          code: '',
+          name: '',
+          parent_id: '',
+        })
+      }
+    }
+  }, [isOpen, editingAccount, reset])
+
+  const onSubmit = (data: CreateAccountFormValues | UpdateAccountFormValues) => {
+    // If empty string, treat parent_id as undefined
+    const payload = {
+      ...data,
+      parent_id: data.parent_id || undefined,
+    }
+
+    if (isEditing && editingAccount) {
+      updateMutation.mutate(
+        { id: editingAccount.id, body: payload },
+        {
+          onSuccess: () => {
+            onOpenChange(false)
+          },
+        }
+      )
+    } else {
+      createMutation.mutate(payload as CreateAccountRequest, {
+        onSuccess: () => {
+          onOpenChange(false)
+        },
+      })
+    }
+  }
+
+  const parentOptions = accounts.filter(a => {
+    if (isEditing && editingAccount && a.id === editingAccount.id) return false
+    // Only level 1 or 2 accounts can be parents usually, but we allow any for flexibility
+    return true
+  })
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>{isEditing ? 'Edit Akun' : 'Tambah Akun Baru'}</DialogTitle>
+          <DialogDescription>
+            {isEditing 
+              ? 'Ubah rincian akun yang sudah ada.' 
+              : 'Buat akun perkiraan (Chart of Accounts) baru untuk pencatatan jurnal.'}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form id="account-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4 pt-4">
+          {!isEditing && (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-(--gray-12)">Tipe Akun</label>
+                <Controller
+                  name="account_type"
+                  control={controlCreate}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value as string}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Pilih tipe akun" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ACCOUNT_TYPES.map(type => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {formErrors.account_type && (
+                  <p className="text-xs text-red-500">{formErrors.account_type.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-(--gray-12)">Kode Akun</label>
+                <Input
+                  placeholder="e.g. 1-1001"
+                  {...registerCreate('code')}
+                />
+                {formErrors.code && (
+                  <p className="text-xs text-red-500">{formErrors.code.message}</p>
+                )}
+              </div>
+            </>
+          )}
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-(--gray-12)">Nama Akun</label>
+            <Input
+              placeholder="e.g. Kas Utama"
+              {...register('name')}
+            />
+            {formErrors.name && (
+              <p className="text-xs text-red-500">{formErrors.name.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-(--gray-12)">Induk Akun (Parent)</label>
+            <Controller
+              name="parent_id"
+              control={control}
+              render={({ field }) => (
+                <Select onValueChange={field.onChange} value={field.value as string}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="-- Tanpa Induk (Root) --" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">-- Tanpa Induk (Root) --</SelectItem>
+                    {parentOptions.map(acc => (
+                      <SelectItem key={acc.id} value={acc.id}>
+                        {acc.code} - {acc.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+
+          {isEditing && (
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-(--gray-12)">Status Aktif</label>
+              <Controller
+                name="is_active"
+                control={control}
+                render={({ field }) => (
+                  <Select 
+                    onValueChange={(val) => field.onChange(val === 'true')} 
+                    value={field.value ? 'true' : 'false'}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="true">Aktif</SelectItem>
+                      <SelectItem value="false">Nonaktif</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Batal
+            </Button>
+            <Button 
+              type="submit" 
+              variant="solid" 
+              loading={createMutation.isPending || updateMutation.isPending}
+            >
+              Simpan
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
