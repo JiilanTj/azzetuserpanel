@@ -31,11 +31,13 @@ export interface UpdateAccountRequest {
   parent_id?: string
 }
 
+export type ItemType = 'BARANG' | 'JASA' | 'PROYEK' | 'AHSP_RAKITAN'
+
 export interface ItemResponse {
   id: string
   workspace_id: string
   account_id?: string
-  item_type: 'BARANG' | 'JASA'
+  item_type: ItemType
   name: string
   description?: string
   unit?: string
@@ -46,7 +48,7 @@ export interface ItemResponse {
 }
 
 export interface CreateItemRequest {
-  item_type: 'BARANG' | 'JASA'
+  item_type: ItemType
   name: string
   description?: string
   unit?: string
@@ -55,7 +57,7 @@ export interface CreateItemRequest {
 }
 
 export interface UpdateItemRequest {
-  item_type?: 'BARANG' | 'JASA'
+  item_type?: ItemType
   name?: string
   description?: string
   unit?: string
@@ -88,6 +90,10 @@ export interface LineItemResponse {
   sort_order: number
 }
 
+export type TransactionType = 'CASH_IN' | 'CASH_OUT' | 'SALES' | 'PURCHASE' | 'JOURNAL' | 'REVERSAL'
+export type InputMode = 'SIMPLE' | 'ADVANCED' | 'OCR'
+export type PaymentMethod = 'TUNAI' | 'KREDIT' | 'TRANSFER'
+
 export interface TransactionResponse {
   id: string
   workspace_id: string
@@ -96,9 +102,9 @@ export interface TransactionResponse {
   posted_at?: string
   voided_at?: string
   status: 'DRAFT' | 'POSTED' | 'VOIDED'
-  transaction_type: 'CASH_IN' | 'CASH_OUT' | 'SALES' | 'PURCHASE' | 'JOURNAL_ENTRY'
-  input_mode: 'SIMPLE' | 'ADVANCED'
-  payment_method?: string
+  transaction_type: TransactionType
+  input_mode: InputMode
+  payment_method?: PaymentMethod
   counterparty_entity_id?: string
   counterparty_name?: string
   description?: string
@@ -118,9 +124,9 @@ export interface TransactionResponse {
 
 export interface CreateTransactionRequest {
   transaction_date: string
-  transaction_type: 'CASH_IN' | 'CASH_OUT' | 'SALES' | 'PURCHASE' | 'JOURNAL_ENTRY'
-  input_mode: 'SIMPLE' | 'ADVANCED'
-  payment_method?: string
+  transaction_type: TransactionType
+  input_mode: InputMode
+  payment_method?: PaymentMethod
   counterparty_entity_id?: string
   description?: string
   amount: string
@@ -128,7 +134,7 @@ export interface CreateTransactionRequest {
   includes_tax?: boolean
   category?: string
   journal_entries?: {
-    account_id: string
+    account_code: string
     debit: string
     credit: string
     description?: string
@@ -137,6 +143,7 @@ export interface CreateTransactionRequest {
     item_id?: string
     description: string
     quantity: string
+    unit?: string
     unit_price: string
     discount_amount?: string
     tax_amount?: string

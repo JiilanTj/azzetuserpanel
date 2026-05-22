@@ -63,8 +63,8 @@ function NewTransactionPage() {
       amount: '',
       description: '',
       journal_entries: [
-        { account_id: '', debit: '', credit: '' },
-        { account_id: '', debit: '', credit: '' },
+        { account_code: '', debit: '', credit: '' },
+        { account_code: '', debit: '', credit: '' },
       ],
     },
   })
@@ -108,7 +108,7 @@ function NewTransactionPage() {
 
   const onSubmit = (values: CreateTransactionFormValues) => {
     if (values.input_mode === 'ADVANCED') {
-      values.transaction_type = 'JOURNAL_ENTRY'
+      values.transaction_type = 'JOURNAL'
       // Simple validation for balanced journal
       const totalDebit = values.journal_entries?.reduce((acc, curr) => acc + Number(curr.debit || 0), 0) || 0
       const totalCredit = values.journal_entries?.reduce((acc, curr) => acc + Number(curr.credit || 0), 0) || 0
@@ -150,7 +150,7 @@ function NewTransactionPage() {
               value={field.value} 
               onValueChange={(val) => {
                 field.onChange(val)
-                if (val === 'ADVANCED') setValue('transaction_type', 'JOURNAL_ENTRY')
+                if (val === 'ADVANCED') setValue('transaction_type', 'JOURNAL')
               }} 
               className="w-full"
             >
@@ -282,7 +282,7 @@ function NewTransactionPage() {
                       <tr key={field.id} className="border-b border-(--gray-5)">
                         <td className="p-2">
                           <Controller
-                            name={`journal_entries.${index}.account_id`}
+                            name={`journal_entries.${index}.account_code`}
                             control={control}
                             render={({ field: { onChange, value } }) => (
                               <Select onValueChange={onChange} value={value}>
@@ -291,7 +291,7 @@ function NewTransactionPage() {
                                 </SelectTrigger>
                                 <SelectContent>
                                   {accounts.filter((a: AccountResponse) => a.level > 1).map((acc: AccountResponse) => (
-                                    <SelectItem key={acc.id} value={acc.id}>
+                                    <SelectItem key={acc.code} value={acc.code}>
                                       {acc.code} - {acc.name}
                                     </SelectItem>
                                   ))}
@@ -335,7 +335,7 @@ function NewTransactionPage() {
                 type="button" 
                 variant="outline" 
                 size="2" 
-                onClick={() => append({ account_id: '', debit: '', credit: '' })}
+                onClick={() => append({ account_code: '', debit: '', credit: '' })}
               >
                 <PlusIcon className="mr-2" />
                 Tambah Baris Entri

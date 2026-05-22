@@ -36,7 +36,7 @@ function TransactionsPage() {
     if (activeTab === 'ALL') return true
     if (activeTab === 'IN') return t.transaction_type === 'CASH_IN' || t.transaction_type === 'SALES'
     if (activeTab === 'OUT') return t.transaction_type === 'CASH_OUT' || t.transaction_type === 'PURCHASE'
-    if (activeTab === 'JOURNAL') return t.transaction_type === 'JOURNAL_ENTRY'
+    if (activeTab === 'JOURNAL') return t.transaction_type === 'JOURNAL'
     return true
   })
 

@@ -21,7 +21,7 @@ export const updateAccountSchema = z.object({
 
 export type UpdateAccountFormValues = z.infer<typeof updateAccountSchema>
 
-export const ITEM_TYPES_TUPLE = ['BARANG', 'JASA'] as const;
+export const ITEM_TYPES_TUPLE = ['BARANG', 'JASA', 'PROYEK', 'AHSP_RAKITAN'] as const;
 
 export const createItemSchema = z.object({
   item_type: z.enum(ITEM_TYPES_TUPLE, {
@@ -48,13 +48,13 @@ export const updateItemSchema = z.object({
 
 export type UpdateItemFormValues = z.infer<typeof updateItemSchema>
 
-export const TRANSACTIONS_TYPES_TUPLE = ['CASH_IN', 'CASH_OUT', 'SALES', 'PURCHASE', 'JOURNAL_ENTRY'] as const;
+export const TRANSACTIONS_TYPES_TUPLE = ['CASH_IN', 'CASH_OUT', 'SALES', 'PURCHASE', 'JOURNAL', 'REVERSAL'] as const;
 
 export const createTransactionSchema = z.object({
   transaction_date: z.string().min(1, 'Tanggal transaksi wajib diisi'),
   transaction_type: z.enum(TRANSACTIONS_TYPES_TUPLE),
-  input_mode: z.enum(['SIMPLE', 'ADVANCED']),
-  payment_method: z.string().optional(),
+  input_mode: z.enum(['SIMPLE', 'ADVANCED', 'OCR']),
+  payment_method: z.enum(['TUNAI', 'KREDIT', 'TRANSFER']).optional(),
   counterparty_entity_id: z.string().optional(),
   description: z.string().optional(),
   amount: z.string().min(1, 'Total nominal wajib diisi'),
@@ -63,7 +63,7 @@ export const createTransactionSchema = z.object({
   category: z.string().optional(),
   
   journal_entries: z.array(z.object({
-    account_id: z.string().min(1, 'Akun harus dipilih'),
+    account_code: z.string().min(1, 'Akun harus dipilih'),
     debit: z.string().min(1, 'Nominal debit wajib diisi'),
     credit: z.string().min(1, 'Nominal kredit wajib diisi'),
     description: z.string().optional()
@@ -73,6 +73,7 @@ export const createTransactionSchema = z.object({
     item_id: z.string().optional(),
     description: z.string().min(1, 'Deskripsi wajib diisi'),
     quantity: z.string().min(1, 'Kuantitas wajib diisi'),
+    unit: z.string().optional(),
     unit_price: z.string().min(1, 'Harga satuan wajib diisi'),
     discount_amount: z.string().optional()
   })).optional()

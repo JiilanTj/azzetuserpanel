@@ -47,7 +47,7 @@ function ItemsPage() {
   const { activeWorkspace } = useWorkspaceStore()
   const { data: itemsData, isLoading } = useItems(activeWorkspace?.id)
 
-  const [activeTab, setActiveTab] = useState<'ALL' | 'BARANG' | 'JASA'>('ALL')
+  const [activeTab, setActiveTab] = useState<'ALL' | 'BARANG' | 'JASA' | 'PROYEK' | 'AHSP_RAKITAN'>('ALL')
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -86,11 +86,13 @@ function ItemsPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'ALL' | 'BARANG' | 'JASA')} className="w-full">
-        <TabsList className="mb-4">
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'ALL' | 'BARANG' | 'JASA' | 'PROYEK' | 'AHSP_RAKITAN')} className="w-full">
+        <TabsList className="mb-4 flex overflow-x-auto">
           <TabsTrigger value="ALL">Semua</TabsTrigger>
           <TabsTrigger value="BARANG">Barang</TabsTrigger>
           <TabsTrigger value="JASA">Jasa / Layanan</TabsTrigger>
+          <TabsTrigger value="PROYEK">Proyek</TabsTrigger>
+          <TabsTrigger value="AHSP_RAKITAN">AHSP / Rakitan</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -288,7 +290,7 @@ function ItemFormModal({
                     <SelectContent>
                       {ITEM_TYPES_TUPLE.map(type => (
                         <SelectItem key={type} value={type}>
-                          {type === 'BARANG' ? 'Barang' : 'Jasa'}
+                          {type === 'BARANG' ? 'Barang' : type === 'JASA' ? 'Jasa' : type === 'PROYEK' ? 'Proyek' : 'AHSP / Rakitan'}
                         </SelectItem>
                       ))}
                     </SelectContent>
