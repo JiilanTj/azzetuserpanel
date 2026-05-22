@@ -78,6 +78,16 @@ export const subscriptionService = {
       .then(r => r.data),
 
   /**
+   * GET /billing/invoices/{id}
+   * Get invoice detail by ID.
+   */
+  getInvoice: (workspaceId: string, id: string) =>
+    apiClient
+      .get(`billing/invoices/${id}`, { headers: wsHeaders(workspaceId) })
+      .json<APIResponse<InvoiceResponse>>()
+      .then(r => r.data),
+
+  /**
    * POST /billing/pay
    * Create a payment attempt/checkout session for an invoice.
    */
@@ -85,5 +95,15 @@ export const subscriptionService = {
     apiClient
       .post('billing/pay', { json: body, headers: wsHeaders(workspaceId) })
       .json<APIResponse<PaymentResponse>>()
+      .then(r => r.data),
+
+  /**
+   * GET /billing/payments
+   * List all payment attempts for the current workspace.
+   */
+  listPayments: (workspaceId: string, params?: { limit?: number; offset?: number }) =>
+    apiClient
+      .get('billing/payments', { searchParams: params, headers: wsHeaders(workspaceId) })
+      .json<APIResponse<PaymentResponse[]>>()
       .then(r => r.data),
 }

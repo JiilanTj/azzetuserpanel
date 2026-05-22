@@ -118,6 +118,7 @@ const MESSAGE_MAP: Record<string, string> = {
 
   // Billing
   'BAD_REQUEST:invoice not found':                       'Invoice tidak ditemukan.',
+  'NOT_FOUND:invoice not found':                         'Invoice tidak ditemukan.',
   'BAD_REQUEST:invoice already paid':                    'Invoice ini sudah dibayar.',
 
   // =====================================================

@@ -116,7 +116,7 @@ function PlansPage() {
                 isCurrentPlan
                   ? "border-(--blue-9) ring-2 ring-(--blue-9)/20"
                   : isPopular
-                    ? "border-(--blue-6) shadow-lg shadow-(--blue-3)"
+                    ? "border-(--blue-6) shadow-(--blue-3)"
                     : "border-(--gray-4) hover:border-(--gray-7)",
               )}
             >
@@ -127,7 +127,7 @@ function PlansPage() {
                 </div>
               )}
               {isPopular && !isCurrentPlan && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold rounded-full uppercase tracking-wider whitespace-nowrap flex items-center gap-1">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-linear-to-r from-blue-600 to-indigo-600 text-white text-[10px] font-bold rounded-full uppercase tracking-wider whitespace-nowrap flex items-center gap-1">
                   <RocketIcon className="h-3 w-3" />
                   Paling Populer
                 </div>
@@ -245,7 +245,7 @@ function PlansPage() {
                   size="3"
                   className={cn(
                     "w-full",
-                    isPopular && !isCurrentPlan && "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700",
+                    isPopular && !isCurrentPlan && "bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700",
                   )}
                 >
                   {isCurrentPlan

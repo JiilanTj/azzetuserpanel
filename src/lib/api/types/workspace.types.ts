@@ -72,3 +72,76 @@ export interface UpdateMemberRequest {
   custom_alias?: string
   status?: MemberStatus
 }
+
+export interface UpdateEntityRequest {
+  nama_utama?: string
+  nomor_wa?: string
+  nik_npwp?: string
+  alamat_lengkap?: string
+}
+
+export interface UpdateEntityMetaRequest {
+  bidang_usaha?: string
+  logo_url?: string
+  website?: string
+  email?: string
+  description?: string
+}
+
+export interface MessageResponse {
+  message: string
+}
+
+export interface InviteResponse {
+  id: string
+  workspace_id: string
+  invited_email: string
+  invited_by: string
+  role_name: string
+  token?: string
+  expires_at: string
+  accepted_at?: string
+  created_at: string
+}
+
+export interface CreateInviteRequest {
+  email: string
+  role_id: string
+}
+
+export interface RoleResponse {
+  id: string
+  name: string
+  description?: string
+  permissions: string[]
+}
+
+export interface CreateRoleRequest {
+  name: string
+  description?: string
+  permissions: string[]
+}
+
+export interface AssignRoleRequest {
+  member_entity_id: string
+  role_id: string
+}
+
+export interface RoleAssignmentResponse {
+  id: string
+  workspace_id: string
+  member_entity_id: string
+  role_id: string
+  role_name: string
+  assigned_by: string
+  created_at: string
+}
+
+export interface UpdateRoleRequest {
+  name?: string
+  description?: string
+  permissions?: string[]
+}
+
+
+

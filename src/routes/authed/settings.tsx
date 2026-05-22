@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod/v4";
@@ -11,7 +11,13 @@ import {
   useChangePassword,
   useLogoutAll,
 } from "@/hooks/use-auth";
-import { Button, Badge } from "@/components/ui";
+import { useWorkspaceStore } from "@/stores/workspace.store";
+import {
+  useEntity,
+  useUpdateEntity,
+  useUpdateEntityMeta,
+} from "@/hooks/use-workspace";
+import { Button, Badge, Input, Textarea } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import {
   LockClosedIcon,
@@ -22,6 +28,7 @@ import {
   EyeOpenIcon,
   EyeClosedIcon,
   PersonIcon,
+  FileTextIcon,
 } from "@radix-ui/react-icons";
 
 export const settingsRoute = createRoute({
@@ -44,7 +51,23 @@ const passwordSchema = z
 
 type PasswordForm = z.infer<typeof passwordSchema>;
 
+// ---- Entity Profile Schema ----
+const entityProfileSchema = z.object({
+  nama_utama: z.string().min(1, "Nama bisnis wajib diisi."),
+  nomor_wa: z.string().optional(),
+  nik_npwp: z.string().optional(),
+  alamat_lengkap: z.string().optional(),
+  bidang_usaha: z.string().optional(),
+  email: z.string().email("Format email tidak valid.").or(z.literal("")),
+  website: z.string().optional(),
+  description: z.string().optional(),
+});
+
+type EntityProfileForm = z.infer<typeof entityProfileSchema>;
+
 function SettingsPage() {
+  const { activeWorkspace } = useWorkspaceStore();
+
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-8">
       {/* Header */}
@@ -58,6 +81,7 @@ function SettingsPage() {
       </div>
 
       <ProfileSection />
+      {activeWorkspace && <EntityProfileSection workspace={activeWorkspace} />}
       <PasswordSection />
       <SessionsSection />
     </div>
@@ -367,6 +391,170 @@ function SessionsSection() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ---- Entity Profile Section ----
+function EntityProfileSection({ workspace }: { workspace: any }) {
+  const { data: entity, isLoading } = useEntity(workspace.entity_id);
+  const updateEntityMutation = useUpdateEntity();
+  const updateEntityMetaMutation = useUpdateEntityMeta();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<EntityProfileForm>({
+    resolver: zodResolver(entityProfileSchema),
+    defaultValues: {
+      nama_utama: "",
+      nomor_wa: "",
+      nik_npwp: "",
+      alamat_lengkap: "",
+      bidang_usaha: "",
+      email: "",
+      website: "",
+      description: "",
+    },
+  });
+
+  useEffect(() => {
+    if (entity) {
+      reset({
+        nama_utama: entity.nama_utama || "",
+        nomor_wa: entity.nomor_wa || "",
+        nik_npwp: entity.nik_npwp || "",
+        alamat_lengkap: entity.alamat_lengkap || "",
+        bidang_usaha: entity.meta?.bidang_usaha || "",
+        email: entity.meta?.email || "",
+        website: entity.meta?.website || "",
+        description: entity.meta?.description || "",
+      });
+    }
+  }, [entity, reset]);
+
+  const onSubmit = handleSubmit(async (data) => {
+    if (!workspace.entity_id) return;
+    try {
+      await Promise.all([
+        updateEntityMutation.mutateAsync({
+          id: workspace.entity_id,
+          body: {
+            nama_utama: data.nama_utama,
+            nomor_wa: data.nomor_wa,
+            nik_npwp: data.nik_npwp,
+            alamat_lengkap: data.alamat_lengkap,
+          },
+        }),
+        updateEntityMetaMutation.mutateAsync({
+          id: workspace.entity_id,
+          body: {
+            bidang_usaha: data.bidang_usaha,
+            email: data.email || undefined,
+            website: data.website,
+            description: data.description,
+          },
+        }),
+      ]);
+    } catch (err) {
+      // Error is handled in the mutations
+    }
+  });
+
+  if (isLoading) {
+    return (
+      <div className="rounded-2xl border border-(--gray-4) bg-surface p-6 flex justify-center py-12">
+        <div className="animate-spin rounded-full h-6 w-6 border-2 border-(--blue-9) border-t-transparent" />
+      </div>
+    );
+  }
+
+  const isPending = updateEntityMutation.isPending || updateEntityMetaMutation.isPending;
+
+  return (
+    <div className="rounded-2xl border border-(--gray-4) bg-surface p-6">
+      <div className="flex items-center gap-3 mb-6">
+        <FileTextIcon className="h-4 w-4 text-(--gray-9)" />
+        <h2 className="text-sm font-semibold text-(--gray-12)">
+          Profil Bisnis &amp; Compliance ({workspace.entity_type === "ORANG_PRIBADI" ? "Pribadi" : "Badan Usaha"})
+        </h2>
+      </div>
+
+      <form onSubmit={onSubmit} className="space-y-4 max-w-2xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            label="Nama Bisnis / Entitas"
+            placeholder="PT Contoh Indonesia"
+            error={!!errors.nama_utama}
+            errorMessage={errors.nama_utama?.message}
+            {...register("nama_utama")}
+          />
+          <Input
+            label="Nomor WhatsApp Bisnis"
+            placeholder="+628123456789"
+            error={!!errors.nomor_wa}
+            errorMessage={errors.nomor_wa?.message}
+            {...register("nomor_wa")}
+          />
+          <Input
+            label="NIK / NPWP"
+            placeholder="01.234.567.8-901.000"
+            error={!!errors.nik_npwp}
+            errorMessage={errors.nik_npwp?.message}
+            {...register("nik_npwp")}
+          />
+          <Input
+            label="Bidang Usaha"
+            placeholder="Perdagangan Umum / Jasa Teknologi"
+            error={!!errors.bidang_usaha}
+            errorMessage={errors.bidang_usaha?.message}
+            {...register("bidang_usaha")}
+          />
+          <Input
+            label="Email Bisnis"
+            type="email"
+            placeholder="kontak@bisnis.com"
+            error={!!errors.email}
+            errorMessage={errors.email?.message}
+            {...register("email")}
+          />
+          <Input
+            label="Website"
+            placeholder="https://bisnis.com"
+            error={!!errors.website}
+            errorMessage={errors.website?.message}
+            {...register("website")}
+          />
+        </div>
+
+        <Textarea
+          label="Alamat Lengkap"
+          placeholder="Jl. Sudirman No. 123, Jakarta Selatan, DKI Jakarta"
+          error={!!errors.alamat_lengkap}
+          errorMessage={errors.alamat_lengkap?.message}
+          {...register("alamat_lengkap")}
+        />
+
+        <Textarea
+          label="Deskripsi Bisnis"
+          placeholder="Deskripsi singkat mengenai bisnis atau entitas Anda..."
+          error={!!errors.description}
+          errorMessage={errors.description?.message}
+          {...register("description")}
+        />
+
+        <Button
+          type="submit"
+          variant="solid"
+          size="2"
+          loading={isPending}
+          className="w-fit mt-2"
+        >
+          Simpan Profil Bisnis
+        </Button>
+      </form>
     </div>
   );
 }

@@ -16,6 +16,8 @@ export const subscriptionKeys = {
   plans: () => [...subscriptionKeys.all, 'plans'] as const,
   subscription: (workspaceId: string) => [...subscriptionKeys.all, 'detail', workspaceId] as const,
   invoices: (workspaceId: string) => [...subscriptionKeys.all, 'invoices', workspaceId] as const,
+  invoice: (workspaceId: string, invoiceId: string) => [...subscriptionKeys.all, 'invoice', workspaceId, invoiceId] as const,
+  payments: (workspaceId: string, params?: { limit?: number; offset?: number }) => [...subscriptionKeys.all, 'payments', workspaceId, params] as const,
 }
 
 // -------------------------------------------------------
@@ -105,6 +107,7 @@ export function usePayInvoice(workspaceId?: string) {
     onSuccess: (data) => {
       if (workspaceId) {
         qc.invalidateQueries({ queryKey: subscriptionKeys.invoices(workspaceId) })
+        qc.invalidateQueries({ queryKey: [...subscriptionKeys.all, 'payments', workspaceId] })
       }
       if (data.payment_url) {
         toast.success('Mengalihkan ke halaman pembayaran...')
@@ -118,3 +121,30 @@ export function usePayInvoice(workspaceId?: string) {
     },
   })
 }
+
+// -------------------------------------------------------
+// useInvoice — get detailed invoice for workspace
+// -------------------------------------------------------
+
+export function useInvoice(workspaceId?: string, invoiceId?: string) {
+  return useQuery({
+    queryKey: subscriptionKeys.invoice(workspaceId ?? '', invoiceId ?? ''),
+    queryFn: () => subscriptionService.getInvoice(workspaceId!, invoiceId!),
+    enabled: !!workspaceId && !!invoiceId,
+    staleTime: 60_000, // 1 min
+  })
+}
+
+// -------------------------------------------------------
+// usePayments — list payment attempts for workspace
+// -------------------------------------------------------
+
+export function usePayments(workspaceId?: string, params?: { limit?: number; offset?: number }) {
+  return useQuery({
+    queryKey: subscriptionKeys.payments(workspaceId ?? '', params),
+    queryFn: () => subscriptionService.listPayments(workspaceId!, params),
+    enabled: !!workspaceId,
+    staleTime: 30_000, // 30s
+  })
+}
+
