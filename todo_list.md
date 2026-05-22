@@ -106,4 +106,4 @@ Ini adalah porsi pekerjaan terbesar yang belum disentuh sama sekali di frontend.
   - [x] `/transactions`: Halaman jurnal & riwayat transaksi bisnis (Daftar & Void Selesai ✅).
   - [x] `/transactions/new`: Form pencatatan transaksi dual-mode (Mode **SIMPLE** untuk Kasir, Mode **ADVANCED** untuk Akuntan), terintegrasi dengan tombol bantuan AI Categorization (Selesai ✅).
   - [x] `/transactions/{id}`: Halaman detail transaksi untuk melihat entri jurnal debit/kredit dan tombol **Void** (jurnal pembalik) (Selesai ✅).
-  - `/reports`: Halaman laporan keuangan interaktif dengan tab Neraca, Laba Rugi, Neraca Saldo, Arus Kas, dan Buku Besar.
+  - [x] `/reports`: Halaman laporan keuangan interaktif dengan tab Neraca, Laba Rugi, Neraca Saldo, Arus Kas, dan Buku Besar (Selesai ✅).
