@@ -102,6 +102,11 @@ const MESSAGE_MAP: Record<string, string> = {
   'BAD_REQUEST:undangan sudah diterima sebelumnya.':     'Undangan sudah diterima sebelumnya.',
   'FORBIDDEN:email akun anda tidak sesuai dengan email yang diundang.': 'Email akun kamu tidak sesuai dengan email yang diundang.',
 
+  // Counterparties
+  'BAD_REQUEST:counterparty already exists':             'Pihak ketiga ini sudah ditambahkan ke dalam daftar.',
+  'NOT_FOUND:counterparty not found':                    'Pihak ketiga tidak ditemukan.',
+  'BAD_REQUEST:cannot add yourself as counterparty':     'Kamu tidak dapat menambahkan entitasmu sendiri sebagai pihak ketiga.',
+
   // =====================================================
   // Subscription Domain
   // =====================================================
@@ -120,6 +125,23 @@ const MESSAGE_MAP: Record<string, string> = {
   'BAD_REQUEST:invoice not found':                       'Invoice tidak ditemukan.',
   'NOT_FOUND:invoice not found':                         'Invoice tidak ditemukan.',
   'BAD_REQUEST:invoice already paid':                    'Invoice ini sudah dibayar.',
+
+  // =====================================================
+  // Accounting Domain (Phase 7)
+  // =====================================================
+  
+  // Accounts (COA)
+  'BAD_REQUEST:account code already exists':             'Kode akun tersebut sudah digunakan.',
+  'NOT_FOUND:account not found':                         'Akun perkiraan tidak ditemukan.',
+  'BAD_REQUEST:cannot delete system account':            'Akun bawaan sistem tidak dapat dihapus.',
+
+  // Items
+  'NOT_FOUND:item not found':                            'Barang atau jasa tidak ditemukan.',
+  
+  // Transactions
+  'BAD_REQUEST:transaction unbalanced':                  'Total debit dan kredit tidak seimbang.',
+  'NOT_FOUND:transaction not found':                     'Data transaksi tidak ditemukan.',
+  'BAD_REQUEST:cannot void already voided transaction':  'Transaksi ini sudah pernah dibatalkan (void).',
 
   // =====================================================
   // Generic

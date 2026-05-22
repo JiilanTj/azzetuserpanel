@@ -10,6 +10,9 @@ import {
   ChevronDownIcon,
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
+  ArchiveIcon,
+  ReaderIcon,
+  ChatBubbleIcon,
 } from '@radix-ui/react-icons'
 import { useAuthStore } from '@/stores/auth.store'
 import { useLogout } from '@/hooks/use-auth'
@@ -30,13 +33,27 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'Dashboard', Icon: DashboardIcon },
-  { to: '/users', label: 'Anggota', Icon: PersonIcon },
-  { to: '/billing', label: 'Tagihan', Icon: CardStackIcon },
-  { to: '/plans', label: 'Langganan', Icon: LayersIcon },
+  {
+    to: '/accounting',
+    label: 'Akuntansi',
+    Icon: CardStackIcon,
+    children: [
+      { to: '/transactions', label: 'Transaksi' },
+      { to: '/accounts', label: 'Daftar Akun' },
+      { to: '/items', label: 'Barang & Jasa' },
+      { to: '/reports', label: 'Laporan' },
+    ],
+  },
+  { to: '/counterparties', label: 'Pihak Ketiga', Icon: ArchiveIcon },
+  { to: '/users', label: 'Anggota Tim', Icon: PersonIcon },
+  { to: '/subscription', label: 'Langganan', Icon: LayersIcon },
   { to: '/settings', label: 'Pengaturan', Icon: GearIcon },
 ]
 
-const BOTTOM_ITEMS: NavItem[] = []
+const BOTTOM_ITEMS: NavItem[] = [
+  { to: '/docs', label: 'Dokumentasi', Icon: ReaderIcon },
+  { to: '/support', label: 'Bantuan', Icon: ChatBubbleIcon },
+]
 
 // -------------------------------------------------------
 // Sidebar
