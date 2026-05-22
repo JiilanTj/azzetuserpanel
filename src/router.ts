@@ -22,6 +22,12 @@ import { settingsRoute } from './routes/authed/settings'
 import { counterpartiesRoute } from './routes/authed/counterparties'
 import { subscriptionRoute } from './routes/authed/subscription'
 
+// Accounting module routes
+import { accountsRoute } from './routes/authed/accounting/accounts'
+import { itemsRoute } from './routes/authed/accounting/items'
+import { transactionsRoute } from './routes/authed/accounting/transactions'
+import { reportsRoute } from './routes/authed/accounting/reports'
+
 const routeTree = rootRoute.addChildren([
   // Public routes
   indexRoute,
@@ -49,6 +55,11 @@ const routeTree = rootRoute.addChildren([
     settingsRoute,
     counterpartiesRoute,
     subscriptionRoute,
+    // Accounting
+    accountsRoute,
+    itemsRoute,
+    transactionsRoute,
+    reportsRoute,
   ]),
 ])
 

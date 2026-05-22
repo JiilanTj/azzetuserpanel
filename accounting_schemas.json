@@ -1,0 +1,602 @@
+{
+  "accounting.AccountResponse": {
+    "type": "object",
+    "properties": {
+      "account_type": {
+        "type": "string",
+        "example": "ASSET"
+      },
+      "code": {
+        "type": "string",
+        "example": "1-1001"
+      },
+      "created_at": {
+        "type": "string",
+        "example": "2026-05-20T10:00:00Z"
+      },
+      "id": {
+        "type": "string",
+        "example": "550e8400-..."
+      },
+      "is_active": {
+        "type": "boolean",
+        "example": true
+      },
+      "is_system": {
+        "type": "boolean",
+        "example": true
+      },
+      "level": {
+        "type": "integer",
+        "example": 3
+      },
+      "name": {
+        "type": "string",
+        "example": "Kas"
+      },
+      "normal_balance": {
+        "type": "string",
+        "example": "DEBIT"
+      },
+      "parent_id": {
+        "type": "string",
+        "example": "550e8400-..."
+      },
+      "updated_at": {
+        "type": "string",
+        "example": "2026-05-20T10:00:00Z"
+      },
+      "workspace_id": {
+        "type": "string",
+        "example": "550e8400-..."
+      }
+    }
+  },
+  "accounting.BalanceSheetEntry": {
+    "type": "object",
+    "properties": {
+      "account_id": {
+        "type": "string"
+      },
+      "account_type": {
+        "type": "string",
+        "example": "ASSET"
+      },
+      "balance": {
+        "type": "string",
+        "example": "300000.00"
+      },
+      "code": {
+        "type": "string",
+        "example": "1-1001"
+      },
+      "name": {
+        "type": "string",
+        "example": "Kas"
+      },
+      "normal_balance": {
+        "type": "string",
+        "example": "DEBIT"
+      }
+    }
+  },
+  "accounting.BalanceSheetReport": {
+    "type": "object",
+    "properties": {
+      "assets": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/accounting.BalanceSheetEntry"
+        }
+      },
+      "equity": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/accounting.BalanceSheetEntry"
+        }
+      },
+      "is_balanced": {
+        "type": "boolean",
+        "example": true
+      },
+      "liabilities": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/accounting.BalanceSheetEntry"
+        }
+      },
+      "total_assets": {
+        "type": "string",
+        "example": "1000000.00"
+      },
+      "total_equity": {
+        "type": "string",
+        "example": "700000.00"
+      },
+      "total_liabilities": {
+        "type": "string",
+        "example": "300000.00"
+      }
+    }
+  },
+  "accounting.CashFlowEntry": {
+    "type": "object",
+    "properties": {
+      "date": {
+        "type": "string",
+        "example": "2026-05-20"
+      },
+      "net_flow": {
+        "type": "string",
+        "example": "50000.00"
+      },
+      "total_credit": {
+        "type": "string",
+        "example": "50000.00"
+      },
+      "total_debit": {
+        "type": "string",
+        "example": "100000.00"
+      }
+    }
+  },
+  "accounting.CategorizationRequest": {
+    "type": "object",
+    "properties": {
+      "amount": {
+        "type": "number",
+        "example": 500000
+      },
+      "description": {
+        "type": "string",
+        "example": "Bayar listrik bulan Mei"
+      },
+      "transaction_type": {
+        "type": "string",
+        "enum": [
+          "CASH_IN",
+          "CASH_OUT",
+          "SALES",
+          "PURCHASE"
+        ],
+        "example": "CASH_OUT"
+      }
+    }
+  },
+  "accounting.CategorizationResult": {
+    "type": "object",
+    "properties": {
+      "category": {
+        "type": "string"
+      },
+      "confidence": {
+        "type": "number"
+      },
+      "used_fallback": {
+        "type": "boolean"
+      }
+    }
+  },
+  "accounting.CreateAccountRequest": {
+    "type": "object",
+    "properties": {
+      "account_type": {
+        "type": "string",
+        "enum": [
+          "ASSET",
+          "LIABILITY",
+          "EQUITY",
+          "REVENUE",
+          "EXPENSE"
+        ],
+        "example": "ASSET"
+      },
+      "code": {
+        "type": "string",
+        "example": "1-3001"
+      },
+      "name": {
+        "type": "string",
+        "example": "Deposito"
+      },
+      "parent_id": {
+        "type": "string",
+        "example": "550e8400-..."
+      }
+    }
+  },
+  "accounting.CreateItemRequest": {
+    "type": "object"
+  },
+  "accounting.CreateTransactionRequest": {
+    "type": "object"
+  },
+  "accounting.IncomeStatementEntry": {
+    "type": "object",
+    "properties": {
+      "account_id": {
+        "type": "string"
+      },
+      "account_type": {
+        "type": "string",
+        "example": "REVENUE"
+      },
+      "balance": {
+        "type": "string",
+        "example": "500000.00"
+      },
+      "code": {
+        "type": "string",
+        "example": "4-1001"
+      },
+      "name": {
+        "type": "string",
+        "example": "Pendapatan Usaha"
+      },
+      "normal_balance": {
+        "type": "string",
+        "example": "CREDIT"
+      },
+      "total_credit": {
+        "type": "string",
+        "example": "500000.00"
+      },
+      "total_debit": {
+        "type": "string",
+        "example": "0.00"
+      }
+    }
+  },
+  "accounting.IncomeStatementReport": {
+    "type": "object",
+    "properties": {
+      "expenses": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/accounting.IncomeStatementEntry"
+        }
+      },
+      "net_income": {
+        "type": "string",
+        "example": "300000.00"
+      },
+      "revenue": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/accounting.IncomeStatementEntry"
+        }
+      },
+      "total_expenses": {
+        "type": "string",
+        "example": "200000.00"
+      },
+      "total_revenue": {
+        "type": "string",
+        "example": "500000.00"
+      }
+    }
+  },
+  "accounting.ItemResponse": {
+    "type": "object",
+    "properties": {
+      "account_id": {
+        "type": "string",
+        "example": "550e8400-..."
+      },
+      "created_at": {
+        "type": "string",
+        "example": "2026-05-20T10:00:00Z"
+      },
+      "description": {
+        "type": "string",
+        "example": "Nasi goreng spesial"
+      },
+      "id": {
+        "type": "string",
+        "example": "550e8400-..."
+      },
+      "is_active": {
+        "type": "boolean",
+        "example": true
+      },
+      "item_type": {
+        "type": "string",
+        "example": "BARANG"
+      },
+      "name": {
+        "type": "string",
+        "example": "Nasi Goreng"
+      },
+      "unit": {
+        "type": "string",
+        "example": "Pcs"
+      },
+      "unit_price": {
+        "type": "string",
+        "example": "15000.00"
+      },
+      "updated_at": {
+        "type": "string",
+        "example": "2026-05-20T10:00:00Z"
+      },
+      "workspace_id": {
+        "type": "string",
+        "example": "550e8400-..."
+      }
+    }
+  },
+  "accounting.JournalEntryResponse": {
+    "type": "object",
+    "properties": {
+      "account_code": {
+        "type": "string",
+        "example": "1-1001"
+      },
+      "account_id": {
+        "type": "string",
+        "example": "550e8400-..."
+      },
+      "account_name": {
+        "type": "string",
+        "example": "Kas"
+      },
+      "credit": {
+        "type": "string",
+        "example": "0.00"
+      },
+      "debit": {
+        "type": "string",
+        "example": "100000.00"
+      },
+      "description": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string",
+        "example": "550e8400-..."
+      },
+      "sort_order": {
+        "type": "integer",
+        "example": 0
+      }
+    }
+  },
+  "accounting.LedgerEntryResponse": {
+    "type": "object",
+    "properties": {
+      "credit": {
+        "type": "string",
+        "example": "0.00"
+      },
+      "debit": {
+        "type": "string",
+        "example": "100000.00"
+      },
+      "id": {
+        "type": "string"
+      },
+      "posted_at": {
+        "type": "string",
+        "example": "2026-05-20T10:00:00Z"
+      },
+      "running_balance": {
+        "type": "string",
+        "example": "100000.00"
+      },
+      "transaction_date": {
+        "type": "string",
+        "example": "2026-05-20"
+      },
+      "transaction_number": {
+        "type": "string",
+        "example": "TXN-000001"
+      },
+      "tx_description": {
+        "type": "string"
+      }
+    }
+  },
+  "accounting.LineItemResponse": {
+    "type": "object",
+    "properties": {
+      "description": {
+        "type": "string",
+        "example": "Nasi Goreng"
+      },
+      "discount_amount": {
+        "type": "string",
+        "example": "0.00"
+      },
+      "id": {
+        "type": "string",
+        "example": "550e8400-..."
+      },
+      "item_id": {
+        "type": "string"
+      },
+      "line_total": {
+        "type": "string",
+        "example": "75000.00"
+      },
+      "quantity": {
+        "type": "string",
+        "example": "5.0000"
+      },
+      "sort_order": {
+        "type": "integer",
+        "example": 0
+      },
+      "tax_amount": {
+        "type": "string",
+        "example": "0.00"
+      },
+      "unit": {
+        "type": "string",
+        "example": "Pcs"
+      },
+      "unit_price": {
+        "type": "string",
+        "example": "15000.00"
+      }
+    }
+  },
+  "accounting.TransactionResponse": {
+    "type": "object",
+    "properties": {
+      "ai_confidence": {
+        "type": "number",
+        "example": 0.92
+      },
+      "amount": {
+        "type": "string",
+        "example": "100000.00"
+      },
+      "category": {
+        "type": "string",
+        "example": "pendapatan_usaha"
+      },
+      "counterparty_entity_id": {
+        "type": "string"
+      },
+      "counterparty_name": {
+        "type": "string"
+      },
+      "created_at": {
+        "type": "string",
+        "example": "2026-05-20T10:00:00Z"
+      },
+      "created_by": {
+        "type": "string",
+        "example": "550e8400-..."
+      },
+      "currency": {
+        "type": "string",
+        "example": "IDR"
+      },
+      "description": {
+        "type": "string"
+      },
+      "id": {
+        "type": "string",
+        "example": "550e8400-..."
+      },
+      "includes_tax": {
+        "type": "boolean",
+        "example": false
+      },
+      "input_mode": {
+        "type": "string",
+        "example": "SIMPLE"
+      },
+      "journal_entries": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/accounting.JournalEntryResponse"
+        }
+      },
+      "line_items": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/accounting.LineItemResponse"
+        }
+      },
+      "payment_method": {
+        "type": "string",
+        "example": "TUNAI"
+      },
+      "posted_at": {
+        "type": "string"
+      },
+      "reversed_transaction_id": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string",
+        "example": "DRAFT"
+      },
+      "tax_amount": {
+        "type": "string",
+        "example": "0.00"
+      },
+      "transaction_date": {
+        "type": "string",
+        "example": "2026-05-20"
+      },
+      "transaction_number": {
+        "type": "string",
+        "example": "TXN-000001"
+      },
+      "transaction_type": {
+        "type": "string",
+        "example": "CASH_IN"
+      },
+      "updated_at": {
+        "type": "string",
+        "example": "2026-05-20T10:00:00Z"
+      },
+      "voided_at": {
+        "type": "string"
+      },
+      "workspace_id": {
+        "type": "string",
+        "example": "550e8400-..."
+      }
+    }
+  },
+  "accounting.TrialBalanceEntry": {
+    "type": "object",
+    "properties": {
+      "account_id": {
+        "type": "string"
+      },
+      "account_type": {
+        "type": "string",
+        "example": "ASSET"
+      },
+      "balance": {
+        "type": "string",
+        "example": "300000.00"
+      },
+      "code": {
+        "type": "string",
+        "example": "1-1001"
+      },
+      "name": {
+        "type": "string",
+        "example": "Kas"
+      },
+      "normal_balance": {
+        "type": "string",
+        "example": "DEBIT"
+      },
+      "total_credit": {
+        "type": "string",
+        "example": "200000.00"
+      },
+      "total_debit": {
+        "type": "string",
+        "example": "500000.00"
+      }
+    }
+  },
+  "accounting.UpdateAccountRequest": {
+    "type": "object",
+    "properties": {
+      "is_active": {
+        "type": "boolean",
+        "example": true
+      },
+      "name": {
+        "type": "string",
+        "example": "Deposito Berjangka"
+      },
+      "parent_id": {
+        "type": "string",
+        "example": "550e8400-..."
+      }
+    }
+  },
+  "accounting.UpdateItemRequest": {
+    "type": "object"
+  }
+}
