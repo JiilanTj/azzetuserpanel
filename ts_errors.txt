@@ -1,3 +1,7 @@
-src/routes/authed/accounting/transactions.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
-src/routes/authed/accounting/transactions.tsx(33,42): error TS2339: Property 'data' does not exist on type 'TransactionResponse[]'.
-src/routes/authed/accounting/transactions.tsx(158,29): error TS2322: Type '`/accounting/transactions/${string}`' is not assignable to type '"/login" | "/" | "/register" | "/forgot-password" | "/verify-email" | "/verify-whatsapp" | "/setup" | "/workspaces" | "/workspaces/new" | "/plans" | "/invite/$token" | "/payment/success" | ... 15 more ... | ".."'.
+src/routes/authed/accounting/transactions.new.tsx(89,35): error TS2322: Type 'string' is not assignable to type 'number'.
+src/routes/authed/accounting/transactions.new.tsx(92,20): error TS2339: Property 'recommended_category' does not exist on type 'CategorizationResult'.
+src/routes/authed/accounting/transactions.new.tsx(93,39): error TS2339: Property 'recommended_category' does not exist on type 'CategorizationResult'.
+src/routes/authed/accounting/transactions.new.tsx(94,51): error TS2339: Property 'recommended_category' does not exist on type 'CategorizationResult'.
+src/routes/authed/accounting/transactions.new.tsx(94,90): error TS2339: Property 'confidence_score' does not exist on type 'CategorizationResult'.
+src/routes/authed/accounting/transactions.new.tsx(230,19): error TS2322: Type '"sm"' is not assignable to type '"1" | "2" | "3" | "4" | "icon" | "icon-sm" | "icon-lg" | null | undefined'.
+src/routes/authed/accounting/transactions.new.tsx(331,17): error TS2322: Type '"sm"' is not assignable to type '"1" | "2" | "3" | "4" | "icon" | "icon-sm" | "icon-lg" | null | undefined'.
