@@ -26,6 +26,8 @@ import { subscriptionRoute } from './routes/authed/subscription'
 import { accountsRoute } from './routes/authed/accounting/accounts'
 import { itemsRoute } from './routes/authed/accounting/items'
 import { transactionsRoute } from './routes/authed/accounting/transactions'
+import { newTransactionRoute } from './routes/authed/accounting/transactions.new'
+import { transactionDetailRoute } from './routes/authed/accounting/transactions.$id'
 import { reportsRoute } from './routes/authed/accounting/reports'
 
 const routeTree = rootRoute.addChildren([
@@ -59,6 +61,8 @@ const routeTree = rootRoute.addChildren([
     accountsRoute,
     itemsRoute,
     transactionsRoute,
+    newTransactionRoute,
+    transactionDetailRoute,
     reportsRoute,
   ]),
 ])
