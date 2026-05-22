@@ -2,8 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
 import { authService } from '@/lib/api/services'
-import { HTTPError } from '@/lib/api/client'
 import { useAuthStore } from '@/stores/auth.store'
+import { extractErrorMessage } from '@/lib/api/errors'
 import type {
   LoginEmailRequest,
   LoginOTPRequest,
@@ -22,103 +22,6 @@ export const authKeys = {
   all: ['auth'] as const,
   me: () => [...authKeys.all, 'me'] as const,
   sessions: () => [...authKeys.all, 'sessions'] as const,
-}
-
-// -------------------------------------------------------
-// API error types
-// -------------------------------------------------------
-
-interface ApiErrorBody {
-  success: false
-  error: {
-    code: string
-    message: string
-    domain?: string
-  }
-}
-
-// -------------------------------------------------------
-// Friendly message mapper
-//
-// Maps backend error code + message combos to copy that
-// feels natural for end users (not admins).
-// -------------------------------------------------------
-
-const MESSAGE_MAP: Record<string, string> = {
-  // Credentials
-  'UNAUTHORIZED:invalid credentials':                    'Email atau password salah. Silakan cek kembali.',
-  'UNAUTHORIZED:account is suspended':                   'Akun ini telah dinonaktifkan. Hubungi dukungan kami.',
-  'UNAUTHORIZED:account is not verified':                'Akun belum diverifikasi. Cek email atau WhatsApp kamu.',
-  'UNAUTHORIZED:account is deleted':                     'Akun ini tidak ditemukan.',
-
-  // OTP
-  'BAD_REQUEST:invalid or expired otp':                  'Kode salah atau sudah kedaluwarsa. Coba minta kode baru.',
-  'BAD_REQUEST:otp already used':                        'Kode ini sudah digunakan. Minta kode baru.',
-  'BAD_REQUEST:otp not found':                           'Kode tidak ditemukan. Silakan minta kode baru.',
-  'TOO_MANY_REQUESTS:too many otp requests':             'Terlalu banyak percobaan. Tunggu sebentar sebelum mencoba lagi.',
-
-  // Registration
-  'BAD_REQUEST:email already registered':                'Email ini sudah terdaftar.',
-  'BAD_REQUEST:whatsapp already registered':             'Nomor WhatsApp ini sudah terdaftar.',
-  'BAD_REQUEST:email or whatsapp is required':           'Email atau nomor WhatsApp harus diisi.',
-  'BAD_REQUEST:invalid email format':                    'Format email tidak valid.',
-  'BAD_REQUEST:invalid whatsapp format':                 'Format nomor WhatsApp tidak valid.',
-  'BAD_REQUEST:password is required':                    'Password harus diisi.',
-  'BAD_REQUEST:name is required':                        'Nama harus diisi.',
-
-  // Password
-  'BAD_REQUEST:old password is incorrect':               'Password lama tidak sesuai.',
-  'BAD_REQUEST:password must be at least 8 characters':  'Password minimal 8 karakter.',
-
-  // Token / Session
-  'UNAUTHORIZED:invalid access token':                   'Sesi tidak valid. Silakan masuk kembali.',
-  'UNAUTHORIZED:invalid refresh token':                  'Sesi telah berakhir. Silakan masuk kembali.',
-  'UNAUTHORIZED:missing refresh token':                  'Tidak ada sesi aktif. Silakan masuk.',
-  'UNAUTHORIZED:token has been revoked':                 'Sesi telah dicabut. Silakan masuk kembali.',
-
-  // Session management
-  'NOT_FOUND:session not found':                         'Sesi tidak ditemukan.',
-  'BAD_REQUEST:cannot revoke current session':           'Tidak dapat mencabut sesi yang sedang aktif.',
-
-  // Generic validation
-  'BAD_REQUEST:invalid request body':                    'Format permintaan tidak valid. Periksa kembali isian kamu.',
-}
-
-function friendlyMessage(body: ApiErrorBody): string {
-  const { code, message } = body.error
-  const key = `${code}:${message.toLowerCase()}`
-
-  if (MESSAGE_MAP[key]) return MESSAGE_MAP[key]
-
-  const partialKey = Object.keys(MESSAGE_MAP).find(k => {
-    const [mapCode, mapMsg] = k.split(':')
-    return mapCode === code && message.toLowerCase().includes(mapMsg)
-  })
-  if (partialKey) return MESSAGE_MAP[partialKey]
-
-  switch (code) {
-    case 'UNAUTHORIZED':      return 'Autentikasi gagal. Silakan masuk kembali.'
-    case 'FORBIDDEN':         return 'Kamu tidak memiliki izin untuk melakukan tindakan ini.'
-    case 'NOT_FOUND':         return 'Data yang diminta tidak ditemukan.'
-    case 'TOO_MANY_REQUESTS': return 'Terlalu banyak percobaan. Tunggu sebentar sebelum mencoba lagi.'
-    case 'BAD_REQUEST':       return 'Permintaan tidak dapat diproses. Periksa kembali isian kamu.'
-    default:                  return 'Terjadi kesalahan. Silakan coba lagi.'
-  }
-}
-
-function extractErrorMessage(err: unknown): string {
-  if (err instanceof HTTPError) {
-    const body = err.data as ApiErrorBody | { message?: string } | undefined
-
-    if (body && 'error' in body && (body as ApiErrorBody).error?.code) {
-      return friendlyMessage(body as ApiErrorBody)
-    }
-    return (body as { message?: string } | undefined)?.message
-      ?? err.response.statusText
-      ?? 'Terjadi kesalahan. Silakan coba lagi.'
-  }
-  if (err instanceof Error) return err.message
-  return 'Terjadi kesalahan. Silakan coba lagi.'
 }
 
 // -------------------------------------------------------

@@ -9,6 +9,8 @@ import { verifyWhatsappRoute } from './routes/verify-whatsapp'
 import { setupRoute } from './routes/setup'
 import { workspacesRoute } from './routes/workspaces'
 import { inviteRoute } from './routes/invite.$token'
+import { paymentSuccessRoute } from './routes/payment.success'
+import { paymentFailedRoute } from './routes/payment.failed'
 import { authedLayout } from './routes/_authed'
 import { dashboardRoute } from './routes/dashboard'
 import { uiOverviewRoute } from './routes/ui-overview'
@@ -33,6 +35,8 @@ const routeTree = rootRoute.addChildren([
   workspacesNewRoute,
   plansRoute,
   inviteRoute,
+  paymentSuccessRoute,
+  paymentFailedRoute,
 
   // Protected routes — wrapped in authed layout (auth guard + sidebar/header)
   authedLayout.addChildren([

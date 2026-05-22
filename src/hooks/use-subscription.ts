@@ -1,10 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { subscriptionService } from '@/lib/api/services'
+import { extractErrorMessage } from '@/lib/api/errors'
 import type {
   SubscribeRequest,
   CreatePaymentRequest,
 } from '@/lib/api/types'
+
+// -------------------------------------------------------
+// Query Keys
+// -------------------------------------------------------
 
 export const subscriptionKeys = {
   all: ['subscription'] as const,
@@ -14,7 +19,7 @@ export const subscriptionKeys = {
 }
 
 // -------------------------------------------------------
-// Plan Hooks (Public)
+// usePlans — list all available plans (public)
 // -------------------------------------------------------
 
 export function usePlans() {
@@ -24,6 +29,10 @@ export function usePlans() {
     staleTime: 10 * 60_000, // 10 mins
   })
 }
+
+// -------------------------------------------------------
+// usePlansWithFeatures — list plans with full feature details
+// -------------------------------------------------------
 
 export function usePlansWithFeatures() {
   return useQuery({
@@ -40,7 +49,7 @@ export function usePlansWithFeatures() {
 }
 
 // -------------------------------------------------------
-// Subscription Hooks
+// useSubscription — get active subscription for workspace
 // -------------------------------------------------------
 
 export function useSubscription(workspaceId?: string) {
@@ -48,8 +57,13 @@ export function useSubscription(workspaceId?: string) {
     queryKey: subscriptionKeys.subscription(workspaceId ?? ''),
     queryFn: () => subscriptionService.getSubscription(workspaceId!),
     enabled: !!workspaceId,
+    staleTime: 60_000, // 1 min
   })
 }
+
+// -------------------------------------------------------
+// useSubscribe — subscribe workspace to a plan
+// -------------------------------------------------------
 
 export function useSubscribe(workspaceId?: string) {
   const qc = useQueryClient()
@@ -61,14 +75,14 @@ export function useSubscribe(workspaceId?: string) {
       }
       toast.success('Pendaftaran langganan berhasil diproses!')
     },
-    onError: (err: unknown) => {
-      toast.error('Gagal memproses langganan', { description: err instanceof Error ? err.message : String(err) })
+    onError: (err) => {
+      toast.error('Gagal memproses langganan', { description: extractErrorMessage(err) })
     },
   })
 }
 
 // -------------------------------------------------------
-// Billing Hooks
+// useInvoices — list invoices for workspace
 // -------------------------------------------------------
 
 export function useInvoices(workspaceId?: string) {
@@ -76,8 +90,13 @@ export function useInvoices(workspaceId?: string) {
     queryKey: subscriptionKeys.invoices(workspaceId ?? ''),
     queryFn: () => subscriptionService.listInvoices(workspaceId!),
     enabled: !!workspaceId,
+    staleTime: 60_000, // 1 min
   })
 }
+
+// -------------------------------------------------------
+// usePayInvoice — initiate payment for an invoice
+// -------------------------------------------------------
 
 export function usePayInvoice(workspaceId?: string) {
   const qc = useQueryClient()
@@ -87,13 +106,15 @@ export function usePayInvoice(workspaceId?: string) {
       if (workspaceId) {
         qc.invalidateQueries({ queryKey: subscriptionKeys.invoices(workspaceId) })
       }
-      toast.success('Sesi pembayaran berhasil dibuat! Mengalihkan...')
       if (data.payment_url) {
+        toast.success('Mengalihkan ke halaman pembayaran...')
         window.location.href = data.payment_url
+      } else {
+        toast.success('Pembayaran berhasil diproses!')
       }
     },
-    onError: (err: unknown) => {
-      toast.error('Gagal membuat sesi pembayaran', { description: err instanceof Error ? err.message : String(err) })
+    onError: (err) => {
+      toast.error('Gagal memproses pembayaran', { description: extractErrorMessage(err) })
     },
   })
 }

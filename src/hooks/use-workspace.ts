@@ -1,11 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { workspaceService } from '@/lib/api/services'
+import { extractErrorMessage } from '@/lib/api/errors'
 import type {
   CreateEntityRequest,
   CreateWorkspaceRequest,
   UpdateMemberRequest,
 } from '@/lib/api/types'
+
+// -------------------------------------------------------
+// Query Keys
+// -------------------------------------------------------
 
 export const workspaceKeys = {
   all: ['workspace'] as const,
@@ -14,20 +19,20 @@ export const workspaceKeys = {
 }
 
 // -------------------------------------------------------
-// Entity Hooks
+// useCreateEntity — create a new business entity
 // -------------------------------------------------------
 
 export function useCreateEntity() {
   return useMutation({
     mutationFn: (body: CreateEntityRequest) => workspaceService.createEntity(body),
-    onError: (err: unknown) => {
-      toast.error('Gagal membuat entitas bisnis', { description: err instanceof Error ? err.message : String(err) })
+    onError: (err) => {
+      toast.error('Gagal membuat entitas bisnis', { description: extractErrorMessage(err) })
     },
   })
 }
 
 // -------------------------------------------------------
-// Workspace Hooks
+// useWorkspaces — list all workspaces user has access to
 // -------------------------------------------------------
 
 export function useWorkspaces() {
@@ -37,6 +42,10 @@ export function useWorkspaces() {
   })
 }
 
+// -------------------------------------------------------
+// useCreateWorkspace — create workspace from entity
+// -------------------------------------------------------
+
 export function useCreateWorkspace() {
   const qc = useQueryClient()
   return useMutation({
@@ -44,14 +53,14 @@ export function useCreateWorkspace() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: workspaceKeys.workspaces() })
     },
-    onError: (err: unknown) => {
-      toast.error('Gagal membuat workspace', { description: err instanceof Error ? err.message : String(err) })
+    onError: (err) => {
+      toast.error('Gagal membuat workspace', { description: extractErrorMessage(err) })
     },
   })
 }
 
 // -------------------------------------------------------
-// Member Hooks
+// useMembers — list all members of a workspace
 // -------------------------------------------------------
 
 export function useMembers(workspaceId?: string) {
@@ -59,8 +68,13 @@ export function useMembers(workspaceId?: string) {
     queryKey: workspaceKeys.members(workspaceId ?? ''),
     queryFn: () => workspaceService.listMembers(workspaceId!),
     enabled: !!workspaceId,
+    staleTime: 60_000, // 1 min
   })
 }
+
+// -------------------------------------------------------
+// useUpdateMember — update member alias/status
+// -------------------------------------------------------
 
 export function useUpdateMember(workspaceId?: string) {
   const qc = useQueryClient()
@@ -73,11 +87,15 @@ export function useUpdateMember(workspaceId?: string) {
       }
       toast.success('Data anggota berhasil diperbarui.')
     },
-    onError: (err: unknown) => {
-      toast.error('Gagal memperbarui anggota', { description: err instanceof Error ? err.message : String(err) })
+    onError: (err) => {
+      toast.error('Gagal memperbarui anggota', { description: extractErrorMessage(err) })
     },
   })
 }
+
+// -------------------------------------------------------
+// useRemoveMember — remove member from workspace
+// -------------------------------------------------------
 
 export function useRemoveMember(workspaceId?: string) {
   const qc = useQueryClient()
@@ -89,8 +107,26 @@ export function useRemoveMember(workspaceId?: string) {
       }
       toast.success('Anggota berhasil dihapus dari workspace.')
     },
-    onError: (err: unknown) => {
-      toast.error('Gagal menghapus anggota', { description: err instanceof Error ? err.message : String(err) })
+    onError: (err) => {
+      toast.error('Gagal menghapus anggota', { description: extractErrorMessage(err) })
+    },
+  })
+}
+
+// -------------------------------------------------------
+// useAcceptInvite — accept workspace invite via token
+// -------------------------------------------------------
+
+export function useAcceptInvite() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (token: string) => workspaceService.acceptInvite(token),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: workspaceKeys.workspaces() })
+      toast.success('Undangan berhasil diterima!')
+    },
+    onError: (err) => {
+      toast.error('Gagal menerima undangan', { description: extractErrorMessage(err) })
     },
   })
 }
