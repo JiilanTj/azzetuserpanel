@@ -143,5 +143,28 @@ export interface UpdateRoleRequest {
   permissions?: string[]
 }
 
+export interface AddCounterpartyRequest {
+  custom_alias?: string
+  entity_id?: string
+  entity_type?: "ORANG_PRIBADI" | "BADAN_USAHA"
+  nama_utama?: string
+  nik_npwp?: string
+  nomor_wa?: string
+  relation_type?: "PELANGGAN" | "VENDOR"
+}
+
+export interface CounterpartyResponse {
+  created_at: string
+  custom_alias?: string
+  entity_id: string
+  entity_name: string
+  entity_type: "ORANG_PRIBADI" | "BADAN_USAHA"
+  id: string
+  is_shadow: boolean
+  relation_type: "PELANGGAN" | "VENDOR"
+  status: string
+}
+
+
 
 

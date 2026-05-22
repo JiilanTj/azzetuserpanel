@@ -18,6 +18,8 @@ export const subscriptionKeys = {
   invoices: (workspaceId: string) => [...subscriptionKeys.all, 'invoices', workspaceId] as const,
   invoice: (workspaceId: string, invoiceId: string) => [...subscriptionKeys.all, 'invoice', workspaceId, invoiceId] as const,
   payments: (workspaceId: string, params?: { limit?: number; offset?: number }) => [...subscriptionKeys.all, 'payments', workspaceId, params] as const,
+  history: (workspaceId: string) => [...subscriptionKeys.all, 'history', workspaceId] as const,
+  usage: (workspaceId: string) => [...subscriptionKeys.all, 'usage', workspaceId] as const,
 }
 
 // -------------------------------------------------------
@@ -148,3 +150,70 @@ export function usePayments(workspaceId?: string, params?: { limit?: number; off
   })
 }
 
+// -------------------------------------------------------
+// useCancelSubscription — cancel active subscription
+// -------------------------------------------------------
+
+export function useCancelSubscription(workspaceId?: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => subscriptionService.cancelSubscription(workspaceId!),
+    onSuccess: () => {
+      if (workspaceId) {
+        qc.invalidateQueries({ queryKey: subscriptionKeys.subscription(workspaceId) })
+        qc.invalidateQueries({ queryKey: subscriptionKeys.history(workspaceId) })
+      }
+      toast.success('Langganan berhasil dibatalkan.')
+    },
+    onError: (err) => {
+      toast.error('Gagal membatalkan langganan', { description: extractErrorMessage(err) })
+    },
+  })
+}
+
+// -------------------------------------------------------
+// useChangeSubscription — upgrade or downgrade
+// -------------------------------------------------------
+
+export function useChangeSubscription(workspaceId?: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: SubscribeRequest) => subscriptionService.changeSubscription(workspaceId!, body),
+    onSuccess: () => {
+      if (workspaceId) {
+        qc.invalidateQueries({ queryKey: subscriptionKeys.subscription(workspaceId) })
+        qc.invalidateQueries({ queryKey: subscriptionKeys.history(workspaceId) })
+      }
+      toast.success('Langganan berhasil diubah.')
+    },
+    onError: (err) => {
+      toast.error('Gagal mengubah langganan', { description: extractErrorMessage(err) })
+    },
+  })
+}
+
+// -------------------------------------------------------
+// useSubscriptionHistory — list subscription history
+// -------------------------------------------------------
+
+export function useSubscriptionHistory(workspaceId?: string) {
+  return useQuery({
+    queryKey: subscriptionKeys.history(workspaceId ?? ''),
+    queryFn: () => subscriptionService.getSubscriptionHistory(workspaceId!),
+    enabled: !!workspaceId,
+    staleTime: 60_000,
+  })
+}
+
+// -------------------------------------------------------
+// useSubscriptionUsage — get tracked feature usage
+// -------------------------------------------------------
+
+export function useSubscriptionUsage(workspaceId?: string) {
+  return useQuery({
+    queryKey: subscriptionKeys.usage(workspaceId ?? ''),
+    queryFn: () => subscriptionService.getSubscriptionUsage(workspaceId!),
+    enabled: !!workspaceId,
+    staleTime: 30_000,
+  })
+}

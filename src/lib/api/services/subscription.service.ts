@@ -7,6 +7,8 @@ import type {
   InvoiceResponse,
   CreatePaymentRequest,
   PaymentResponse,
+  MessageResponse,
+  UsageResponse,
 } from '../types'
 
 // Helper to construct headers with optional X-Workspace-ID
@@ -61,6 +63,46 @@ export const subscriptionService = {
     apiClient
       .post('subscription', { json: body, headers: wsHeaders(workspaceId) })
       .json<APIResponse<SubscriptionResponse>>()
+      .then(r => r.data),
+
+  /**
+   * POST /subscription/cancel
+   * Cancel the active subscription for the workspace.
+   */
+  cancelSubscription: (workspaceId: string) =>
+    apiClient
+      .post('subscription/cancel', { headers: wsHeaders(workspaceId) })
+      .json<APIResponse<MessageResponse>>()
+      .then(r => r.data),
+
+  /**
+   * POST /subscription/change
+   * Cancel current subscription and subscribe to a new plan.
+   */
+  changeSubscription: (workspaceId: string, body: SubscribeRequest) =>
+    apiClient
+      .post('subscription/change', { json: body, headers: wsHeaders(workspaceId) })
+      .json<APIResponse<SubscriptionResponse>>()
+      .then(r => r.data),
+
+  /**
+   * GET /subscription/history
+   * Returns all subscriptions (active, expired, cancelled) for the workspace.
+   */
+  getSubscriptionHistory: (workspaceId: string) =>
+    apiClient
+      .get('subscription/history', { headers: wsHeaders(workspaceId) })
+      .json<APIResponse<SubscriptionResponse[]>>()
+      .then(r => r.data),
+
+  /**
+   * GET /subscription/usage
+   * Returns quota usage for all tracked features in the current billing period.
+   */
+  getSubscriptionUsage: (workspaceId: string) =>
+    apiClient
+      .get('subscription/usage', { headers: wsHeaders(workspaceId) })
+      .json<APIResponse<UsageResponse[]>>()
       .then(r => r.data),
 
   // -------------------------------------------------------

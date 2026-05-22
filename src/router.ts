@@ -19,6 +19,8 @@ import { workspacesNewRoute } from './routes/onboarding/workspaces.new'
 import { usersRoute } from './routes/authed/users'
 import { billingRoute } from './routes/authed/billing'
 import { settingsRoute } from './routes/authed/settings'
+import { counterpartiesRoute } from './routes/authed/counterparties'
+import { subscriptionRoute } from './routes/authed/subscription'
 
 const routeTree = rootRoute.addChildren([
   // Public routes
@@ -45,6 +47,8 @@ const routeTree = rootRoute.addChildren([
     usersRoute,
     billingRoute,
     settingsRoute,
+    counterpartiesRoute,
+    subscriptionRoute,
   ]),
 ])
 

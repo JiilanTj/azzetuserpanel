@@ -12,6 +12,7 @@ import type {
   CreateRoleRequest,
   AssignRoleRequest,
   UpdateRoleRequest,
+  AddCounterpartyRequest,
 } from '@/lib/api/types'
 
 // -------------------------------------------------------
@@ -381,6 +382,34 @@ export function useUpdateRole(workspaceId?: string) {
     },
     onError: (err) => {
       toast.error('Gagal memperbarui role', { description: extractErrorMessage(err) })
+    },
+  })
+}
+
+// -------------------------------------------------------
+// Counterparties
+// -------------------------------------------------------
+
+export function useCounterparties(workspaceId?: string) {
+  return useQuery({
+    queryKey: [...workspaceKeys.all(workspaceId!), 'counterparties'],
+    queryFn: () => workspaceService.listCounterparties(workspaceId!),
+    enabled: !!workspaceId,
+  })
+}
+
+export function useAddCounterparty(workspaceId?: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: AddCounterpartyRequest) => workspaceService.addCounterparty(workspaceId!, body),
+    onSuccess: () => {
+      if (workspaceId) {
+        qc.invalidateQueries({ queryKey: [...workspaceKeys.all(workspaceId), 'counterparties'] })
+      }
+      toast.success('Pihak ketiga (Counterparty) berhasil ditambahkan.')
+    },
+    onError: (err) => {
+      toast.error('Gagal menambahkan pihak ketiga', { description: extractErrorMessage(err) })
     },
   })
 }

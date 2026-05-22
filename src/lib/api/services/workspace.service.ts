@@ -17,6 +17,8 @@ import type {
   AssignRoleRequest,
   RoleAssignmentResponse,
   UpdateRoleRequest,
+  AddCounterpartyRequest,
+  CounterpartyResponse,
 } from '../types'
 
 // Helper to construct headers with optional X-Workspace-ID
@@ -250,4 +252,25 @@ export const workspaceService = {
       .patch(`workspaces/roles/${roleId}`, { json: body, headers: wsHeaders(workspaceId) })
       .json<APIResponse<MessageResponse>>()
       .then(r => r.data),
+
+  /**
+   * GET /workspaces/counterparties
+   * List all counterparties for the active workspace.
+   */
+  listCounterparties: (workspaceId: string) =>
+    apiClient
+      .get('workspaces/counterparties', { headers: wsHeaders(workspaceId) })
+      .json<APIResponse<CounterpartyResponse[]>>()
+      .then(r => r.data),
+
+  /**
+   * POST /workspaces/counterparties
+   * Add a counterparty to the active workspace.
+   */
+  addCounterparty: (workspaceId: string, body: AddCounterpartyRequest) =>
+    apiClient
+      .post('workspaces/counterparties', { json: body, headers: wsHeaders(workspaceId) })
+      .json<APIResponse<CounterpartyResponse>>()
+      .then(r => r.data),
 }
+

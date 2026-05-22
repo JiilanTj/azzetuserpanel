@@ -11,8 +11,8 @@ Berdasarkan perbandingan antara **USER_FLOW.md** dengan status implementasi *cod
 | **1. Billing & Payment** | Tambahan API + Pembaruan Halaman Billing | 🟢 Selesai |
 | **2. Entities Management** | API Services Baru + Halaman Pengaturan Profil | 🟢 Selesai |
 | **3. Roles & Invites** | API Services Baru + Halaman Kelola Role & Undangan | 🟢 Selesai |
-| **4. Workspace Counterparties** | API Services Baru + Halaman Daftar Pihak Ketiga | 🔴 Belum Ada |
-| **5. Subscription Management** | API Services Baru + Halaman Riwayat & Penggunaan | 🔴 Belum Ada |
+| **4. Workspace Counterparties** | API Services Baru + Halaman Daftar Pihak Ketiga | 🟢 Selesai |
+| **5. Subscription Management** | API Services Baru + Halaman Riwayat & Penggunaan | 🟢 Selesai |
 | **6. Accounting (Phase 7)** | **Modul Utama Baru** (Akun, Barang/Jasa, Transaksi, Laporan Keuangan) | 🔴 Belum Ada |
 
 ---
@@ -56,22 +56,22 @@ Fitur kolaborasi tim yang mendalam (mengundang anggota & menentukan wewenang/rol
 
 ### 4. Workspace Counterparties
 Daftar pelanggan (customers) atau pemasok (vendors) untuk pencatatan transaksi.
-- [ ] **API Service (`workspace.service.ts`):**
-  - Implementasikan `GET /workspaces/counterparties` (list pihak ketiga).
-  - Implementasikan `POST /workspaces/counterparties` (tambah pihak ketiga).
-- [ ] **Halaman UI (`/workspace/counterparties`):**
-  - Buat halaman daftar *counterparties* dengan filter tipe relasi (`PELANGGAN` / `PEMASOK`).
-  - Form tambah counterparty (dilengkapi opsi pencarian entitas via `/entities/search`).
+- [x] **API Service (`workspace.service.ts`):**
+  - [x] Implementasikan `GET /workspaces/counterparties` (list pihak ketiga).
+  - [x] Implementasikan `POST /workspaces/counterparties` (tambah pihak ketiga).
+- [x] **Halaman UI (`/workspace/counterparties`):**
+  - [x] Buat halaman daftar *counterparties* dengan filter tipe relasi (`PELANGGAN` / `PEMASOK`).
+  - [x] Form tambah counterparty (dilengkapi opsi pencarian entitas via `/entities/search`).
 
 ### 5. Subscription Management
 Mengelola pembatalan atau pergantian paket langganan secara mandiri.
-- [ ] **API Service (`subscription.service.ts`):**
-  - Implementasikan `POST /subscription/cancel` (batalkan langganan otomatis).
-  - Implementasikan `POST /subscription/change` (upgrade atau downgrade paket).
-  - Implementasikan `GET /subscription/history` (riwayat mutasi langganan).
-  - Implementasikan `GET /subscription/usage` (kuota pemakaian fitur, e.g., sisa limit transaksi/OCR).
-- [ ] **Halaman UI (`/plans` & `/settings`):**
-  - Integrasikan UI untuk membatalkan paket, mengganti plan aktif, dan memantau riwayat & penggunaan kuota workspace.
+- [x] **API Service (`subscription.service.ts`):**
+  - [x] Implementasikan `POST /subscription/cancel` (batalkan langganan otomatis).
+  - [x] Implementasikan `POST /subscription/change` (upgrade atau downgrade paket).
+  - [x] Implementasikan `GET /subscription/history` (riwayat mutasi langganan).
+  - [x] Implementasikan `GET /subscription/usage` (kuota pemakaian fitur, e.g., sisa limit transaksi/OCR).
+- [x] **Halaman UI (`/subscription`):**
+  - [x] Integrasikan UI untuk membatalkan paket, mengganti plan aktif, dan memantau riwayat & penggunaan kuota workspace.
 
 ### 6. Accounting Module (Phase 7 - Modul Utama)
 Ini adalah porsi pekerjaan terbesar yang belum disentuh sama sekali di frontend.
