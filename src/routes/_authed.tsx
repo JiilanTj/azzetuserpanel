@@ -45,19 +45,8 @@ function AuthedLayout() {
         return;
       }
 
-      try {
-        const workspaces = await businessService.listWorkspaces();
-        if (cancelled) return;
-
-        if (workspaces && workspaces.length > 0) {
-          setActiveWorkspace(workspaces[0]);
-          setInitialized(true);
-        } else {
-          navigate({ to: "/setup", replace: true });
-        }
-      } catch {
-        if (!cancelled) setInitialized(true);
-      }
+      // No active workspace — redirect to workspace selection
+      navigate({ to: "/workspaces", replace: true });
     }
 
     init();
@@ -77,7 +66,7 @@ function AuthedLayout() {
         if (cancelled) return;
         setSubscription(sub);
 
-        if (sub.status === 'expired' || sub.status === 'cancelled') {
+        if (sub.status === 'expired' || sub.status === 'cancelled' || sub.status === 'pending_payment') {
           navigate({ to: "/plans", replace: true });
         }
       } catch {

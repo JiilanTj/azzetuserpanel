@@ -1,22 +1,18 @@
-import { useState } from "react";
 import { createRoute } from "@tanstack/react-router";
 import { authedLayout } from "./_authed";
 import {
   useMembers,
-  useInviteMember,
   useUpdateMember,
   useRemoveMember,
 } from "@/hooks/use-business";
 import { useWorkspaceStore } from "@/stores/workspace.store";
 import { Button, Badge } from "@/components/ui";
 import { cn } from "@/lib/utils";
-import type { WorkspaceRole, MemberStatus } from "@/lib/api/types";
+import type { MemberStatus } from "@/lib/api/types";
 import {
   PersonIcon,
-  PlusIcon,
   TrashIcon,
-  Pencil1Icon,
-  Cross2Icon,
+  InfoCircledIcon,
 } from "@radix-ui/react-icons";
 
 export const usersRoute = createRoute({
@@ -24,13 +20,6 @@ export const usersRoute = createRoute({
   path: "/users",
   component: UsersPage,
 });
-
-const roleLabels: Record<WorkspaceRole, string> = {
-  PEMILIK: "Pemilik",
-  KASIR: "Kasir",
-  AKUNTAN: "Akuntan",
-  VIEWER: "Viewer",
-};
 
 const statusConfig: Record<
   MemberStatus,
@@ -43,58 +32,18 @@ const statusConfig: Record<
 function UsersPage() {
   const { activeWorkspace } = useWorkspaceStore();
   const { data: members, isLoading } = useMembers(activeWorkspace?.entity_id);
-  const inviteMutation = useInviteMember(activeWorkspace?.entity_id);
   const updateMutation = useUpdateMember(activeWorkspace?.entity_id);
   const removeMutation = useRemoveMember(activeWorkspace?.entity_id);
 
-  const [showInviteForm, setShowInviteForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editRole, setEditRole] = useState<WorkspaceRole>("VIEWER");
-
-  // Invite form state
-  const [inviteEntityId, setInviteEntityId] = useState("");
-  const [inviteAlias, setInviteAlias] = useState("");
-  const [inviteRole, setInviteRole] = useState<WorkspaceRole>("VIEWER");
-
-  const handleInvite = async () => {
-    if (!inviteEntityId.trim()) return;
-    await inviteMutation.mutateAsync(
-      {
-        entity_id: inviteEntityId.trim(),
-        custom_alias: inviteAlias.trim() || undefined,
-        role: inviteRole,
-      },
-      {
-        onSuccess: () => {
-          setShowInviteForm(false);
-          setInviteEntityId("");
-          setInviteAlias("");
-          setInviteRole("VIEWER");
-        },
-      },
-    );
-  };
-
-  const handleUpdateRole = async (memberId: string) => {
-    await updateMutation.mutateAsync(
-      { memberId, body: { role: editRole } },
-      {
-        onSuccess: () => setEditingId(null),
-      },
-    );
+  const handleToggleStatus = async (memberId: string, currentStatus: MemberStatus) => {
+    const newStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    await updateMutation.mutateAsync({ memberId, body: { status: newStatus } });
   };
 
   const handleRemove = async (memberId: string) => {
     if (!confirm("Yakin ingin menghapus anggota ini dari workspace?")) return;
     await removeMutation.mutateAsync(memberId);
   };
-
-  const inputCls = cn(
-    "flex h-9 w-full rounded-lg border px-3 text-sm",
-    "bg-(--gray-1) text-(--gray-12) placeholder:text-(--gray-9)",
-    "transition-all duration-200 outline-none",
-    "border-(--gray-6) hover:border-(--gray-8) focus:ring-2 focus:ring-(--blue-9) focus:border-(--blue-8)",
-  );
 
   if (isLoading) {
     return (
@@ -113,86 +62,24 @@ function UsersPage() {
             Anggota Workspace
           </h1>
           <p className="text-sm text-(--gray-10)">
-            Kelola tim dan atur peran akses untuk workspace ini.
+            Kelola tim dan atur akses untuk workspace ini.
           </p>
         </div>
-        <Button
-          variant="solid"
-          size="2"
-          onClick={() => setShowInviteForm(true)}
-          leftIcon={<PlusIcon className="h-4 w-4" />}
-        >
-          Tambah Anggota
-        </Button>
       </div>
 
-      {/* Invite Form */}
-      {showInviteForm && (
-        <div className="rounded-2xl border border-(--blue-6) bg-(--blue-2) p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-(--gray-12)">
-              Undang Anggota Baru
-            </h3>
-            <button
-              onClick={() => setShowInviteForm(false)}
-              className="text-(--gray-9) hover:text-(--gray-12) cursor-pointer"
-            >
-              <Cross2Icon className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-(--gray-11)">
-                Entity ID
-              </label>
-              <input
-                type="text"
-                placeholder="UUID entitas anggota"
-                value={inviteEntityId}
-                onChange={(e) => setInviteEntityId(e.target.value)}
-                className={inputCls}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-(--gray-11)">
-                Alias (opsional)
-              </label>
-              <input
-                type="text"
-                placeholder="Nama panggilan"
-                value={inviteAlias}
-                onChange={(e) => setInviteAlias(e.target.value)}
-                className={inputCls}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-(--gray-11)">
-                Peran
-              </label>
-              <select
-                value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value as WorkspaceRole)}
-                className={inputCls}
-              >
-                <option value="VIEWER">Viewer</option>
-                <option value="KASIR">Kasir</option>
-                <option value="AKUNTAN">Akuntan</option>
-                <option value="PEMILIK">Pemilik</option>
-              </select>
-            </div>
-          </div>
-          <div className="mt-4 flex justify-end">
-            <Button
-              variant="solid"
-              size="2"
-              loading={inviteMutation.isPending}
-              onClick={handleInvite}
-            >
-              Undang
-            </Button>
-          </div>
+      {/* Info banner about invite */}
+      <div className="flex items-start gap-3 rounded-xl border border-(--blue-4) bg-(--blue-2) p-4">
+        <InfoCircledIcon className="h-4 w-4 text-(--blue-9) mt-0.5 shrink-0" />
+        <div>
+          <p className="text-sm text-(--gray-12) font-medium mb-0.5">
+            Undang anggota baru via email
+          </p>
+          <p className="text-xs text-(--gray-10)">
+            Untuk mengundang anggota baru, gunakan fitur undangan di menu Roles &amp; Invites.
+            Undangan dikirim via email dan berlaku selama 24 jam. Penerima harus sudah memiliki akun Azzet.
+          </p>
         </div>
-      )}
+      </div>
 
       {/* Members List */}
       <div className="rounded-2xl border border-(--gray-4) bg-surface overflow-hidden">
@@ -227,7 +114,10 @@ function UsersPage() {
                     Tipe
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-semibold text-(--gray-11) uppercase tracking-wider">
-                    Peran
+                    Relasi
+                  </th>
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-(--gray-11) uppercase tracking-wider">
+                    Role
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-semibold text-(--gray-11) uppercase tracking-wider">
                     Status
@@ -244,7 +134,7 @@ function UsersPage() {
                 {members.map((member) => {
                   const status =
                     statusConfig[member.status] ?? statusConfig.ACTIVE;
-                  const isEditing = editingId === member.id;
+                  const isOwner = member.relation_type === "PEMILIK";
 
                   return (
                     <tr
@@ -269,40 +159,12 @@ function UsersPage() {
                           : "Badan Usaha"}
                       </td>
                       <td className="px-6 py-4">
-                        {isEditing ? (
-                          <div className="flex items-center gap-2">
-                            <select
-                              value={editRole}
-                              onChange={(e) =>
-                                setEditRole(e.target.value as WorkspaceRole)
-                              }
-                              className="h-7 rounded border border-(--gray-6) bg-(--gray-1) text-xs px-2"
-                            >
-                              <option value="VIEWER">Viewer</option>
-                              <option value="KASIR">Kasir</option>
-                              <option value="AKUNTAN">Akuntan</option>
-                              <option value="PEMILIK">Pemilik</option>
-                            </select>
-                            <Button
-                              size="1"
-                              variant="solid"
-                              onClick={() => handleUpdateRole(member.id)}
-                              loading={updateMutation.isPending}
-                            >
-                              Simpan
-                            </Button>
-                            <button
-                              onClick={() => setEditingId(null)}
-                              className="text-(--gray-9) hover:text-(--gray-12) cursor-pointer"
-                            >
-                              <Cross2Icon className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <Badge variant="soft">
-                            {roleLabels[member.role ?? 'VIEWER']}
-                          </Badge>
-                        )}
+                        <Badge variant={isOwner ? "solid" : "soft"}>
+                          {member.relation_type}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 text-(--gray-10) text-xs">
+                        {member.role ?? "-"}
                       </td>
                       <td className="px-6 py-4">
                         <Badge variant={status.variant}>{status.label}</Badge>
@@ -318,18 +180,21 @@ function UsersPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        {(member.role ?? 'VIEWER') !== "PEMILIK" && !isEditing && (
+                        {!isOwner && (
                           <div className="flex items-center justify-end gap-1">
                             <Button
                               variant="ghost"
                               size="1"
-                              onClick={() => {
-                                setEditingId(member.id);
-                                setEditRole(member.role ?? 'VIEWER');
-                              }}
-                              className="text-(--gray-9) hover:text-(--blue-11)"
+                              onClick={() => handleToggleStatus(member.id, member.status)}
+                              loading={updateMutation.isPending}
+                              className={cn(
+                                "text-xs",
+                                member.status === "ACTIVE"
+                                  ? "text-amber-600 hover:text-amber-700"
+                                  : "text-emerald-600 hover:text-emerald-700"
+                              )}
                             >
-                              <Pencil1Icon className="h-3.5 w-3.5" />
+                              {member.status === "ACTIVE" ? "Nonaktifkan" : "Aktifkan"}
                             </Button>
                             <Button
                               variant="ghost"

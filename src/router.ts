@@ -8,6 +8,7 @@ import { verifyEmailRoute } from './routes/verify-email'
 import { verifyWhatsappRoute } from './routes/verify-whatsapp'
 import { setupRoute } from './routes/setup'
 import { workspacesRoute } from './routes/workspaces'
+import { inviteRoute } from './routes/invite.$token'
 import { authedLayout } from './routes/_authed'
 import { dashboardRoute } from './routes/dashboard'
 import { uiOverviewRoute } from './routes/ui-overview'
@@ -31,6 +32,7 @@ const routeTree = rootRoute.addChildren([
   workspacesRoute,
   workspacesNewRoute,
   plansRoute,
+  inviteRoute,
 
   // Protected routes — wrapped in authed layout (auth guard + sidebar/header)
   authedLayout.addChildren([

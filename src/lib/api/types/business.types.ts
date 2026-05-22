@@ -3,8 +3,8 @@
 // -------------------------------------------------------
 
 export type EntityType = 'ORANG_PRIBADI' | 'BADAN_USAHA'
-export type WorkspaceRole = 'PEMILIK' | 'KASIR' | 'AKUNTAN' | 'VIEWER'
-export type SubscriptionStatus = 'active' | 'trial' | 'expired' | 'cancelled'
+export type WorkspaceRole = string // Dynamic roles from ABAC system (e.g. "PEMILIK", "KARYAWAN", or custom role names)
+export type SubscriptionStatus = 'active' | 'trial' | 'expired' | 'cancelled' | 'pending_payment'
 export type InvoiceStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'refunded'
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'refunded'
 export type MemberStatus = 'ACTIVE' | 'INACTIVE'
@@ -46,6 +46,8 @@ export interface WorkspaceResponse {
   entity_name: string
   entity_type: EntityType
   role: WorkspaceRole
+  subscription_status?: SubscriptionStatus
+  plan_name?: string
   created_at: string
 }
 
@@ -154,14 +156,7 @@ export interface MemberResponse {
   created_at: string
 }
 
-export interface InviteMemberRequest {
-  entity_id: string
-  custom_alias?: string
-  role: WorkspaceRole
-}
-
 export interface UpdateMemberRequest {
-  role?: WorkspaceRole
   custom_alias?: string
   status?: MemberStatus
 }

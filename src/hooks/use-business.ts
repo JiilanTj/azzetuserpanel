@@ -6,7 +6,6 @@ import type {
   CreateWorkspaceRequest,
   SubscribeRequest,
   CreatePaymentRequest,
-  InviteMemberRequest,
   UpdateMemberRequest,
 } from '@/lib/api/types'
 
@@ -150,22 +149,6 @@ export function useMembers(workspaceId?: string) {
     queryKey: businessKeys.members(workspaceId ?? ''),
     queryFn: () => businessService.listMembers(workspaceId!),
     enabled: !!workspaceId,
-  })
-}
-
-export function useInviteMember(workspaceId?: string) {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (body: InviteMemberRequest) => businessService.inviteMember(workspaceId!, body),
-    onSuccess: () => {
-      if (workspaceId) {
-        qc.invalidateQueries({ queryKey: businessKeys.members(workspaceId) })
-      }
-      toast.success('Anggota berhasil ditambahkan!')
-    },
-    onError: (err: unknown) => {
-      toast.error('Gagal menambahkan anggota', { description: err instanceof Error ? err.message : String(err) })
-    },
   })
 }
 

@@ -12,7 +12,6 @@ import type {
   CreatePaymentRequest,
   PaymentResponse,
   MemberResponse,
-  InviteMemberRequest,
   UpdateMemberRequest,
 } from '../types'
 
@@ -147,18 +146,8 @@ export const businessService = {
       .then(r => r.data),
 
   /**
-   * POST /workspaces/members
-   * Invite a new member to the workspace.
-   */
-  inviteMember: (workspaceId: string, body: InviteMemberRequest) =>
-    apiClient
-      .post('workspaces/members', { json: body, headers: wsHeaders(workspaceId) })
-      .json<APIResponse<MemberResponse>>()
-      .then(r => r.data),
-
-  /**
    * PATCH /workspaces/members/:id
-   * Update a member's role or status.
+   * Update a member's alias or status.
    */
   updateMember: (workspaceId: string, memberId: string, body: UpdateMemberRequest) =>
     apiClient
@@ -173,6 +162,20 @@ export const businessService = {
   removeMember: (workspaceId: string, memberId: string) =>
     apiClient
       .delete(`workspaces/members/${memberId}`, { headers: wsHeaders(workspaceId) })
+      .json<APIResponse<{ message: string }>>()
+      .then(r => r.data),
+
+  // -------------------------------------------------------
+  // Invites
+  // -------------------------------------------------------
+
+  /**
+   * POST /workspaces/invites/accept
+   * Accept a workspace invite using a token.
+   */
+  acceptInvite: (token: string) =>
+    apiClient
+      .post('workspaces/invites/accept', { json: { token } })
       .json<APIResponse<{ message: string }>>()
       .then(r => r.data),
 }
