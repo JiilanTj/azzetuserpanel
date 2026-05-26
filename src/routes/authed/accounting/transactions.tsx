@@ -25,8 +25,8 @@ export const transactionsRoute = createRoute({
 
 function TransactionsPage() {
   const { activeWorkspace } = useWorkspaceStore()
-  const { data: transactionsData, isLoading } = useTransactions(activeWorkspace?.id)
-  const voidMutation = useVoidTransaction(activeWorkspace?.id)
+  const { data: transactionsData, isLoading } = useTransactions(activeWorkspace?.entity_id)
+  const voidMutation = useVoidTransaction(activeWorkspace?.entity_id)
 
   const [activeTab, setActiveTab] = useState<'ALL' | 'IN' | 'OUT' | 'JOURNAL'>('ALL')
 

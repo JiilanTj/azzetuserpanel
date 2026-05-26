@@ -27,14 +27,15 @@ import {
   type UpdateAccountFormValues,
 } from '@/lib/validations'
 import {
-  ChevronRightIcon,
   ChevronDownIcon,
   PlusIcon,
   Pencil1Icon,
-  TrashIcon,
+  EyeOpenIcon,
+  EyeNoneIcon,
 } from '@radix-ui/react-icons'
 import type { AccountResponse, AccountType, CreateAccountRequest } from '@/lib/api/types/accounting.types'
 import { useCreateAccount, useUpdateAccount } from '@/hooks/use-accounting'
+import { cn } from '@/lib/utils'
 
 // Types
 type TreeNode = AccountResponse & { children: TreeNode[] }
@@ -98,7 +99,8 @@ function flattenNodes(nodes: TreeNode[], expandedIds: Set<string>): TreeNode[] {
 
 function AccountsPage() {
   const { activeWorkspace } = useWorkspaceStore()
-  const { data: accountsData, isLoading } = useAccounts(activeWorkspace?.id)
+  const { data: accountsData, isLoading } = useAccounts(activeWorkspace?.entity_id, true)
+  const updateMutation = useUpdateAccount(activeWorkspace?.entity_id)
 
   const [expandedTypes, setExpandedTypes] = useState<Set<AccountType>>(
     new Set(['ASSET', 'LIABILITY', 'EQUITY', 'REVENUE', 'EXPENSE'])
@@ -109,14 +111,32 @@ function AccountsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<AccountResponse | null>(null)
 
+  // Confirmation Dialog State
+  const [confirmTarget, setConfirmTarget] = useState<AccountResponse | null>(null)
+
   const handleOpenCreate = () => {
     setEditingAccount(null)
     setIsModalOpen(true)
   }
 
   const handleOpenEdit = (acc: AccountResponse) => {
+    if (acc.is_system) return
     setEditingAccount(acc)
     setIsModalOpen(true)
+  }
+
+  const handleToggleActive = (acc: AccountResponse) => {
+    if (acc.is_system) return
+    setConfirmTarget(acc)
+  }
+
+  const handleConfirmToggle = () => {
+    if (!confirmTarget) return
+    updateMutation.mutate({
+      id: confirmTarget.id,
+      body: { is_active: !confirmTarget.is_active }
+    })
+    setConfirmTarget(null)
   }
 
   const roots = useMemo(() => buildTree(accountsData || []), [accountsData])
@@ -175,103 +195,176 @@ function AccountsPage() {
         </div>
       </div>
 
-      <div className="border border-(--gray-6) rounded-xl overflow-hidden bg-white dark:bg-(--gray-2)">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-(--gray-3) text-(--gray-11) border-b border-(--gray-6)">
-            <tr>
-              <th className="py-3 px-4 font-medium w-[250px]">Kode Akun</th>
-              <th className="py-3 px-4 font-medium">Nama Akun</th>
-              <th className="py-3 px-4 font-medium w-[150px]">Saldo Normal</th>
-              <th className="py-3 px-4 font-medium w-[120px] text-center">Status</th>
-              <th className="py-3 px-4 font-medium w-[100px] text-right">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ACCOUNT_TYPES.map(type => (
-              <React.Fragment key={type.value}>
-                <tr 
-                  className="bg-(--gray-4) cursor-pointer hover:bg-(--gray-5) transition-colors border-b border-(--gray-6)"
-                  onClick={() => toggleType(type.value)}
-                >
-                  <td colSpan={5} className="py-3 px-4 font-semibold text-(--gray-12)">
-                    <div className="flex items-center gap-2">
-                      {expandedTypes.has(type.value) ? <ChevronDownIcon /> : <ChevronRightIcon />}
-                      {type.label}
-                    </div>
-                  </td>
-                </tr>
-                {expandedTypes.has(type.value) && flattenNodes(roots[type.value], expandedIds).map(node => (
-                  <tr key={node.id} className="border-b border-(--gray-5) hover:bg-(--gray-3) transition-colors group">
-                    <td className="py-2.5 px-4">
-                      <div 
-                        className="flex items-center gap-2" 
-                        style={{ paddingLeft: `${(node.level - 1) * 1.5}rem` }}
-                      >
-                        {node.children.length > 0 ? (
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); toggleNode(node.id); }}
-                            className="p-0.5 rounded-md hover:bg-(--gray-6) text-(--gray-11) transition-colors"
-                          >
-                            {expandedIds.has(node.id) ? <ChevronDownIcon /> : <ChevronRightIcon />}
-                          </button>
-                        ) : (
-                          <span className="w-[20px]" />
-                        )}
-                        <span className="font-medium text-(--gray-12)">{node.code}</span>
-                      </div>
-                    </td>
-                    <td className="py-2.5 px-4 text-(--gray-11)">
-                      {node.name}
-                      {node.is_system && (
-                        <Badge variant="gray" className="ml-2 h-5 px-1.5 text-[10px]">Sistem</Badge>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-4 text-(--gray-11)">
-                      {node.normal_balance === 'DEBIT' ? 'Debit' : 'Kredit'}
-                    </td>
-                    <td className="py-2.5 px-4 text-center">
-                      <Badge variant={node.is_active ? 'success' : 'gray'} className="h-5 text-[10px]">
-                        {node.is_active ? 'Aktif' : 'Nonaktif'}
-                      </Badge>
-                    </td>
-                    <td className="py-2.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button 
-                          variant="ghost" 
-                          className="h-7 w-7 p-0 text-(--gray-11)"
-                          onClick={(e) => { e.stopPropagation(); handleOpenEdit(node); }}
-                        >
-                          <Pencil1Icon className="h-3.5 w-3.5" />
-                        </Button>
-                        {!node.is_system && (
-                          <Button variant="ghost" className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950">
-                            <TrashIcon className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
+      <div className="border border-(--gray-6) rounded-xl overflow-hidden bg-white dark:bg-(--gray-2) shadow-sm">
+        <div className="overflow-auto max-h-[calc(100vh-220px)]">
+          <table className="w-full text-sm text-left border-collapse">
+            <thead className="sticky top-0 z-10 bg-(--gray-2) dark:bg-(--gray-3)">
+              <tr className="border-b-2 border-(--gray-7)">
+                <th className="py-3 px-5 font-semibold text-(--gray-11) text-xs uppercase tracking-wider w-[280px]">Kode Akun</th>
+                <th className="py-3 px-4 font-semibold text-(--gray-11) text-xs uppercase tracking-wider">Nama Akun</th>
+                <th className="py-3 px-4 font-semibold text-(--gray-11) text-xs uppercase tracking-wider w-[120px]">Saldo</th>
+                <th className="py-3 px-4 font-semibold text-(--gray-11) text-xs uppercase tracking-wider w-[110px] text-center">Status</th>
+                <th className="py-3 px-4 font-semibold text-(--gray-11) text-xs uppercase tracking-wider w-[80px] text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ACCOUNT_TYPES.map(type => (
+                <React.Fragment key={type.value}>
+                  {/* Category header */}
+                  <tr
+                    className="cursor-pointer transition-colors border-b border-(--gray-6)"
+                    onClick={() => toggleType(type.value)}
+                  >
+                    <td colSpan={5} className="py-2.5 px-5 bg-(--gray-3) dark:bg-(--gray-4)">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-(--gray-9) transition-transform duration-150" style={{ display: 'inline-flex', transform: expandedTypes.has(type.value) ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
+                          <ChevronDownIcon />
+                        </span>
+                        <span className="font-semibold text-(--gray-12) text-[13px] tracking-wide">
+                          {type.label}
+                        </span>
+                        <span className="text-[11px] text-(--gray-9) font-normal ml-1">
+                          {roots[type.value].length} akun
+                        </span>
                       </div>
                     </td>
                   </tr>
-                ))}
-              </React.Fragment>
-            ))}
-            
-            {(!accountsData || accountsData.length === 0) && !isLoading && (
-              <tr>
-                <td colSpan={5} className="py-12 text-center text-(--gray-11)">
-                  Belum ada akun yang terdaftar.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                  {/* Tree items */}
+                  {expandedTypes.has(type.value) && flattenNodes(roots[type.value], expandedIds).map((node, idx) => {
+                    const isEven = idx % 2 === 0
+                    return (
+                      <tr
+                        key={node.id}
+                        className={cn(
+                          'transition-colors group',
+                          isEven ? 'bg-transparent' : 'bg-(--gray-2) dark:bg-(--gray-3)'
+                        )}
+                      >
+                        <td className="py-2 px-5">
+                          <div className="flex items-center gap-1.5" style={{ paddingLeft: `${(node.level - 1) * 1.5}rem` }}>
+                            {node.children.length > 0 ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); toggleNode(node.id); }}
+                                className="p-0.5 rounded-md hover:bg-(--gray-6) text-(--gray-9) hover:text-(--gray-12) transition-all"
+                              >
+                                <ChevronDownIcon
+                                  className={cn('h-3.5 w-3.5 transition-transform', !expandedIds.has(node.id) && '-rotate-90')}
+                                />
+                              </button>
+                            ) : (
+                              <span className="w-[22px]" />
+                            )}
+                            <span className="font-mono font-medium text-(--gray-12) text-[13px] tracking-tight">
+                              {node.code}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-2 px-4">
+                          <div className="flex items-center gap-2">
+                            <span className="text-(--gray-12) text-[13px]">{node.name}</span>
+                            {node.is_system && (
+                              <Badge variant="gray" className="h-[18px] px-1.5 text-[10px] font-medium tracking-wide uppercase">
+                                Sistem
+                              </Badge>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-2 px-4">
+                          <span className={cn(
+                            'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold',
+                            node.normal_balance === 'DEBIT'
+                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
+                              : 'bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-400'
+                          )}>
+                            {node.normal_balance === 'DEBIT' ? 'Debit' : 'Kredit'}
+                          </span>
+                        </td>
+                        <td className="py-2 px-4 text-center">
+                          <Badge
+                            variant={node.is_active ? 'success' : 'gray'}
+                            className="h-[18px] px-1.5 text-[10px] font-medium"
+                          >
+                            {node.is_active ? 'Aktif' : 'Nonaktif'}
+                          </Badge>
+                        </td>
+                        <td className="py-2 px-4 text-right">
+                          <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                            {!node.is_system ? (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  className="h-7 w-7 p-0 text-(--gray-9) hover:text-(--gray-12) hover:bg-(--gray-5)"
+                                  onClick={(e) => { e.stopPropagation(); handleOpenEdit(node); }}
+                                >
+                                  <Pencil1Icon className="h-3.5 w-3.5" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  className={cn(
+                                    'h-7 w-7 p-0',
+                                    node.is_active
+                                      ? 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50'
+                                      : 'text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/50'
+                                  )}
+                                  onClick={(e) => { e.stopPropagation(); handleToggleActive(node); }}
+                                >
+                                  {node.is_active ? <EyeNoneIcon className="h-3.5 w-3.5" /> : <EyeOpenIcon className="h-3.5 w-3.5" />}
+                                </Button>
+                              </>
+                            ) : null}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </React.Fragment>
+              ))}
+
+              {(!accountsData || accountsData.length === 0) && !isLoading && (
+                <tr>
+                  <td colSpan={5} className="py-16 text-center">
+                    <p className="text-(--gray-9) text-sm">Belum ada akun yang terdaftar.</p>
+                    <p className="text-(--gray-9) text-xs mt-1">Klik "Tambah Akun" untuk memulai.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      {/* Confirm Toggle Active Dialog */}
+      <Dialog open={!!confirmTarget} onOpenChange={() => setConfirmTarget(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>
+              {confirmTarget?.is_active ? 'Nonaktifkan Akun' : 'Aktifkan Akun'}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmTarget?.is_active
+                ? `Apakah Anda yakin ingin menonaktifkan akun "${confirmTarget?.code} - ${confirmTarget?.name}"? Akun ini tidak akan muncul di jurnal baru.`
+                : `Apakah Anda yakin ingin mengaktifkan kembali akun "${confirmTarget?.code} - ${confirmTarget?.name}"?`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="ghost" onClick={() => setConfirmTarget(null)}>Batal</Button>
+            <Button
+              variant="solid"
+              onClick={handleConfirmToggle}
+              loading={updateMutation.isPending}
+            >
+              {confirmTarget?.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AccountFormModal 
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
         editingAccount={editingAccount}
         accounts={accountsData || []}
-        workspaceId={activeWorkspace?.id}
+        workspaceId={activeWorkspace?.entity_id}
       />
     </div>
   )
@@ -306,7 +399,7 @@ function AccountFormModal({
       account_type: 'ASSET',
       code: '',
       name: '',
-      parent_id: '',
+      parent_id: '__none__',
     },
   })
 
@@ -321,14 +414,14 @@ function AccountFormModal({
         reset({
           name: editingAccount.name,
           is_active: editingAccount.is_active,
-          parent_id: editingAccount.parent_id || '',
+          parent_id: editingAccount.parent_id || '__none__',
         })
       } else {
         reset({
           account_type: 'ASSET',
           code: '',
           name: '',
-          parent_id: '',
+          parent_id: '__none__',
         })
       }
     }
@@ -338,7 +431,7 @@ function AccountFormModal({
     // If empty string, treat parent_id as undefined
     const payload = {
       ...data,
-      parent_id: data.parent_id || undefined,
+      parent_id: data.parent_id === '__none__' ? undefined : data.parent_id,
     }
 
     if (isEditing && editingAccount) {
@@ -390,7 +483,7 @@ function AccountFormModal({
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Pilih tipe akun" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent searchable searchPlaceholder="Cari tipe akun...">
                         {ACCOUNT_TYPES.map(type => (
                           <SelectItem key={type.value} value={type.value}>
                             {type.label}
@@ -439,8 +532,8 @@ function AccountFormModal({
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="-- Tanpa Induk (Root) --" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">-- Tanpa Induk (Root) --</SelectItem>
+                  <SelectContent searchable searchPlaceholder="Cari akun induk...">
+                    <SelectItem value="__none__">-- Tanpa Induk (Root) --</SelectItem>
                     {parentOptions.map(acc => (
                       <SelectItem key={acc.id} value={acc.id}>
                         {acc.code} - {acc.name}

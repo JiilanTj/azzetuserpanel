@@ -52,7 +52,7 @@ export interface CreateItemRequest {
   name: string
   description?: string
   unit?: string
-  unit_price: string
+  unit_price: number
   account_id?: string
 }
 
@@ -61,7 +61,7 @@ export interface UpdateItemRequest {
   name?: string
   description?: string
   unit?: string
-  unit_price?: string
+  unit_price?: number
   account_id?: string
   is_active?: boolean
 }
@@ -129,24 +129,24 @@ export interface CreateTransactionRequest {
   payment_method?: PaymentMethod
   counterparty_entity_id?: string
   description?: string
-  amount: string
-  tax_amount?: string
+  amount: number
+  tax_amount?: number
   includes_tax?: boolean
   category?: string
   journal_entries?: {
     account_code: string
-    debit: string
-    credit: string
+    debit: number
+    credit: number
     description?: string
   }[]
   line_items?: {
     item_id?: string
     description: string
-    quantity: string
+    quantity: number
     unit?: string
-    unit_price: string
-    discount_amount?: string
-    tax_amount?: string
+    unit_price: number
+    discount_amount?: number
+    tax_amount?: number
   }[]
 }
 

@@ -63,9 +63,9 @@ export const createTransactionSchema = z.object({
   category: z.string().optional(),
   
   journal_entries: z.array(z.object({
-    account_code: z.string().min(1, 'Akun harus dipilih'),
-    debit: z.string().min(1, 'Nominal debit wajib diisi'),
-    credit: z.string().min(1, 'Nominal kredit wajib diisi'),
+    account_code: z.string().optional(),
+    debit: z.string().optional(),
+    credit: z.string().optional(),
     description: z.string().optional()
   })).optional(),
   

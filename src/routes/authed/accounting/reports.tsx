@@ -380,13 +380,13 @@ function ReportsPage() {
         </TabsList>
 
         <div className="mt-4">
-          {activeWorkspace?.id ? (
+          {activeWorkspace?.entity_id ? (
             <>
-              {activeTab === 'INCOME_STATEMENT' && <IncomeStatementView workspaceId={activeWorkspace.id} />}
-              {activeTab === 'BALANCE_SHEET' && <BalanceSheetView workspaceId={activeWorkspace.id} />}
-              {activeTab === 'TRIAL_BALANCE' && <TrialBalanceView workspaceId={activeWorkspace.id} />}
-              {activeTab === 'CASH_FLOW' && <CashFlowView workspaceId={activeWorkspace.id} />}
-              {activeTab === 'LEDGER' && <LedgerView workspaceId={activeWorkspace.id} />}
+              {activeTab === 'INCOME_STATEMENT' && <IncomeStatementView workspaceId={activeWorkspace.entity_id} />}
+              {activeTab === 'BALANCE_SHEET' && <BalanceSheetView workspaceId={activeWorkspace.entity_id} />}
+              {activeTab === 'TRIAL_BALANCE' && <TrialBalanceView workspaceId={activeWorkspace.entity_id} />}
+              {activeTab === 'CASH_FLOW' && <CashFlowView workspaceId={activeWorkspace.entity_id} />}
+              {activeTab === 'LEDGER' && <LedgerView workspaceId={activeWorkspace.entity_id} />}
             </>
           ) : (
             <div className="py-12 text-center text-(--gray-11)">Pilih workspace aktif terlebih dahulu.</div>

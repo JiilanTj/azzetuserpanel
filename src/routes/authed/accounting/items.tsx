@@ -2,12 +2,13 @@ import React, { useState } from 'react'
 import { createRoute } from '@tanstack/react-router'
 import { authedLayout } from '../_authed'
 import { useWorkspaceStore } from '@/stores/workspace.store'
-import { useItems, useCreateItem, useUpdateItem, useAccounts } from '@/hooks/use-accounting'
+import { useItems, useCreateItem, useUpdateItem, useDeleteItem, useReactivateItem, useAccounts } from '@/hooks/use-accounting'
 import { useForm, Controller, type Control } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Button,
   Badge,
+  CurrencyInput,
   Dialog,
   DialogContent,
   DialogHeader,
@@ -33,9 +34,13 @@ import {
 import {
   PlusIcon,
   Pencil1Icon,
-  TrashIcon,
+  EyeOpenIcon,
+  EyeNoneIcon,
 } from '@radix-ui/react-icons'
 import type { ItemResponse, CreateItemRequest, AccountResponse } from '@/lib/api/types/accounting.types'
+import { cn } from '@/lib/utils'
+
+const VALID_UNITS = ['Pcs', 'Kg', 'Liter', 'Meter', 'M2', 'M3', 'Jam', 'Hari', 'Paket', 'Unit', 'Box', 'Lusin', 'Set', 'Rim'] as const
 
 export const itemsRoute = createRoute({
   getParentRoute: () => authedLayout,
@@ -45,13 +50,18 @@ export const itemsRoute = createRoute({
 
 function ItemsPage() {
   const { activeWorkspace } = useWorkspaceStore()
-  const { data: itemsData, isLoading } = useItems(activeWorkspace?.id)
+  const { data: itemsData, isLoading } = useItems(activeWorkspace?.entity_id, true)
+  const deleteMutation = useDeleteItem(activeWorkspace?.entity_id)
+  const reactivateMutation = useReactivateItem(activeWorkspace?.entity_id)
 
   const [activeTab, setActiveTab] = useState<'ALL' | 'BARANG' | 'JASA' | 'PROYEK' | 'AHSP_RAKITAN'>('ALL')
   
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<ItemResponse | null>(null)
+
+  // Confirmation Dialog State
+  const [confirmTarget, setConfirmTarget] = useState<ItemResponse | null>(null)
 
   const handleOpenCreate = () => {
     setEditingItem(null)
@@ -61,6 +71,20 @@ function ItemsPage() {
   const handleOpenEdit = (item: ItemResponse) => {
     setEditingItem(item)
     setIsModalOpen(true)
+  }
+
+  const handleToggleActive = (item: ItemResponse) => {
+    setConfirmTarget(item)
+  }
+
+  const handleConfirmToggle = () => {
+    if (!confirmTarget) return
+    if (confirmTarget.is_active) {
+      deleteMutation.mutate(confirmTarget.id)
+    } else {
+      reactivateMutation.mutate(confirmTarget.id)
+    }
+    setConfirmTarget(null)
   }
 
   const items = itemsData || []
@@ -151,8 +175,17 @@ function ItemsPage() {
                       >
                         <Pencil1Icon className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" className="h-7 w-7 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950">
-                        <TrashIcon className="h-3.5 w-3.5" />
+                      <Button
+                        variant="ghost"
+                        className={cn(
+                          'h-7 w-7 p-0',
+                          item.is_active
+                            ? 'text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50'
+                            : 'text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/50'
+                        )}
+                        onClick={(e) => { e.stopPropagation(); handleToggleActive(item); }}
+                      >
+                        {item.is_active ? <EyeNoneIcon className="h-3.5 w-3.5" /> : <EyeOpenIcon className="h-3.5 w-3.5" />}
                       </Button>
                     </div>
                   </td>
@@ -163,11 +196,37 @@ function ItemsPage() {
         </table>
       </div>
 
+      {/* Confirm Toggle Active Dialog */}
+      <Dialog open={!!confirmTarget} onOpenChange={() => setConfirmTarget(null)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>
+              {confirmTarget?.is_active ? 'Nonaktifkan Item' : 'Aktifkan Item'}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmTarget?.is_active
+                ? `Apakah Anda yakin ingin menonaktifkan item "${confirmTarget?.name}"? Item ini tidak akan muncul di daftar baru.`
+                : `Apakah Anda yakin ingin mengaktifkan kembali item "${confirmTarget?.name}"?`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="ghost" onClick={() => setConfirmTarget(null)}>Batal</Button>
+            <Button
+              variant="solid"
+              onClick={handleConfirmToggle}
+              loading={deleteMutation.isPending || reactivateMutation.isPending}
+            >
+              {confirmTarget?.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <ItemFormModal 
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
         editingItem={editingItem}
-        workspaceId={activeWorkspace?.id}
+        workspaceId={activeWorkspace?.entity_id}
       />
     </div>
   )
@@ -206,7 +265,7 @@ function ItemFormModal({
       description: '',
       unit: '',
       unit_price: '',
-      account_id: '',
+      account_id: '__none__',
     },
   })
 
@@ -221,7 +280,7 @@ function ItemFormModal({
           description: editingItem.description || '',
           unit: editingItem.unit || '',
           unit_price: Number(editingItem.unit_price).toString(), // Remove any decimal padding if present
-          account_id: editingItem.account_id || '',
+          account_id: editingItem.account_id || '__none__',
           is_active: editingItem.is_active,
         })
       } else {
@@ -231,7 +290,7 @@ function ItemFormModal({
           description: '',
           unit: '',
           unit_price: '',
-          account_id: '',
+          account_id: '__none__',
         })
       }
     }
@@ -242,7 +301,8 @@ function ItemFormModal({
       ...data,
       description: data.description || undefined,
       unit: data.unit || undefined,
-      account_id: data.account_id || undefined,
+      unit_price: typeof data.unit_price === 'string' ? Number(data.unit_price) : data.unit_price,
+      account_id: data.account_id === '__none__' ? undefined : data.account_id,
     }
 
     if (isEditing && editingItem) {
@@ -304,9 +364,21 @@ function ItemFormModal({
 
             <div className="space-y-1.5">
               <label className="text-sm font-medium text-(--gray-12)">Satuan (Opsional)</label>
-              <Input
-                placeholder="e.g. Pcs, Jam"
-                {...register('unit')}
+              <Controller
+                name="unit"
+                control={control}
+                render={({ field }) => (
+                  <Select onValueChange={field.onChange} value={field.value as string}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Pilih satuan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {VALID_UNITS.map(u => (
+                        <SelectItem key={u} value={u}>{u}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               />
             </div>
           </div>
@@ -324,10 +396,18 @@ function ItemFormModal({
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-(--gray-12)">Harga Satuan</label>
-            <Input
-              type="number"
-              placeholder="e.g. 150000"
-              {...register('unit_price' as keyof CreateItemFormValues)}
+            <Controller
+              name="unit_price"
+              control={control}
+              render={({ field }) => (
+                <CurrencyInput
+                  placeholder="e.g. 150.000"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  name={field.name}
+                />
+              )}
             />
             {formErrors.unit_price && (
               <p className="text-xs text-red-500">{formErrors.unit_price.message}</p>
@@ -344,8 +424,8 @@ function ItemFormModal({
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="-- Tanpa Akun Khusus --" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">-- Tanpa Akun Khusus --</SelectItem>
+                  <SelectContent searchable searchPlaceholder="Cari akun...">
+                    <SelectItem value="__none__">-- Tanpa Akun Khusus --</SelectItem>
                     {accountOptions.map((acc: AccountResponse) => (
                       <SelectItem key={acc.id} value={acc.id}>
                         {acc.code} - {acc.name}

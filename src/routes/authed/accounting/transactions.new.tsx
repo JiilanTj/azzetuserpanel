@@ -16,6 +16,7 @@ import { useWorkspaceStore } from '@/stores/workspace.store'
 import {
   Button,
   Input,
+  CurrencyInput,
   Select,
   SelectTrigger,
   SelectValue,
@@ -27,7 +28,7 @@ import {
 } from '@/components/ui'
 import { MagicWandIcon, PlusIcon, TrashIcon } from '@radix-ui/react-icons'
 import { toast } from 'sonner'
-import type { AccountResponse, CounterpartyResponse } from '@/lib/api/types'
+import type { AccountResponse, CounterpartyResponse, CreateTransactionRequest } from '@/lib/api/types'
 
 export const newTransactionRoute = createRoute({
   getParentRoute: () => authedLayout,
@@ -38,14 +39,14 @@ export const newTransactionRoute = createRoute({
 function NewTransactionPage() {
   const navigate = useNavigate()
   const { activeWorkspace } = useWorkspaceStore()
-  
-  const createMutation = useCreateTransaction(activeWorkspace?.id)
-  const categorizeMutation = useCategorizeTransaction(activeWorkspace?.id)
-  
-  const { data: accountsData } = useAccounts(activeWorkspace?.id)
+
+  const createMutation = useCreateTransaction(activeWorkspace?.entity_id)
+  const categorizeMutation = useCategorizeTransaction(activeWorkspace?.entity_id)
+
+  const { data: accountsData } = useAccounts(activeWorkspace?.entity_id)
   const accounts = accountsData || []
-  
-  const { data: counterpartiesData } = useCounterparties(activeWorkspace?.id)
+
+  const { data: counterpartiesData } = useCounterparties(activeWorkspace?.entity_id)
   const counterparties = counterpartiesData || []
 
   const {
@@ -63,8 +64,8 @@ function NewTransactionPage() {
       amount: '',
       description: '',
       journal_entries: [
-        { account_code: '', debit: '', credit: '' },
-        { account_code: '', debit: '', credit: '' },
+        { account_code: undefined as string | undefined, debit: undefined as string | undefined, credit: undefined as string | undefined },
+        { account_code: undefined as string | undefined, debit: undefined as string | undefined, credit: undefined as string | undefined },
       ],
     },
   })
@@ -88,10 +89,10 @@ function NewTransactionPage() {
       return
     }
     categorizeMutation.mutate(
-      { 
-        description: currentDesc, 
+      {
+        description: currentDesc,
         amount: Number(currentAmount || 0),
-        transaction_type: currentType 
+        transaction_type: currentType
       },
       {
         onSuccess: (data) => {
@@ -109,7 +110,6 @@ function NewTransactionPage() {
   const onSubmit = (values: CreateTransactionFormValues) => {
     if (values.input_mode === 'ADVANCED') {
       values.transaction_type = 'JOURNAL'
-      // Simple validation for balanced journal
       const totalDebit = values.journal_entries?.reduce((acc, curr) => acc + Number(curr.debit || 0), 0) || 0
       const totalCredit = values.journal_entries?.reduce((acc, curr) => acc + Number(curr.credit || 0), 0) || 0
       if (totalDebit !== totalCredit) {
@@ -123,11 +123,44 @@ function NewTransactionPage() {
       values.amount = totalDebit.toString()
     }
 
-    createMutation.mutate(values, {
-      onSuccess: () => {
-        navigate({ to: '/accounting/transactions' })
+    const journalEntries = values.input_mode === 'ADVANCED'
+      ? (values.journal_entries || []).filter(e => e.account_code && (e.debit || e.credit))
+          .map(e => ({ account_code: e.account_code!, debit: Number(e.debit), credit: Number(e.credit), description: e.description || undefined }))
+      : undefined
+
+    const payload = {
+      transaction_date: values.transaction_date,
+      transaction_type: values.transaction_type,
+      input_mode: values.input_mode,
+      payment_method: values.payment_method,
+      counterparty_entity_id: values.counterparty_entity_id === '__none__' ? undefined : values.counterparty_entity_id,
+      description: values.description,
+      amount: Number(values.amount),
+      tax_amount: values.tax_amount ? Number(values.tax_amount) : undefined,
+      includes_tax: values.includes_tax,
+      category: values.category,
+      journal_entries: journalEntries,
+      line_items: values.line_items,
+    }
+
+    createMutation.mutate(payload as CreateTransactionRequest,
+      {
+        onSuccess: () => {
+          navigate({ to: '/accounting/transactions' })
+        },
+        onError: (err) => {
+          toast.error('Gagal mencatat transaksi', { description: (err as Error)?.message || String(err) })
+        },
       }
-    })
+    )
+  }
+
+  const onValidationError = () => {
+    const first = Object.keys(formErrors)[0]
+    if (first) {
+      const msg = formErrors[first]?.message
+      toast.error(Array.isArray(msg) ? msg[0] : msg || `Field "${first}" tidak valid`)
+    }
   }
 
   return (
@@ -141,17 +174,17 @@ function NewTransactionPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 bg-white dark:bg-(--gray-2) p-6 rounded-xl border border-(--gray-6)">
+      <form onSubmit={handleSubmit(onSubmit, e => { onValidationError(); console.error(e) })} className="space-y-8 bg-white dark:bg-(--gray-2) p-6 rounded-xl border border-(--gray-6)">
         <Controller
           name="input_mode"
           control={control}
           render={({ field }) => (
-            <Tabs 
-              value={field.value} 
+            <Tabs
+              value={field.value}
               onValueChange={(val) => {
                 field.onChange(val)
                 if (val === 'ADVANCED') setValue('transaction_type', 'JOURNAL')
-              }} 
+              }}
               className="w-full"
             >
               <TabsList className="grid w-full grid-cols-2 max-w-[400px]">
@@ -194,7 +227,19 @@ function NewTransactionPage() {
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-(--gray-12)">Total Nominal (IDR)</label>
-                <Input type="number" placeholder="Contoh: 1500000" {...register('amount')} />
+                <Controller
+                  name="amount"
+                  control={control}
+                  render={({ field }) => (
+                    <CurrencyInput
+                      placeholder="Contoh: 1.500.000"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                    />
+                  )}
+                />
                 {formErrors.amount && <p className="text-xs text-red-500">{formErrors.amount.message}</p>}
               </div>
 
@@ -209,7 +254,7 @@ function NewTransactionPage() {
                         <SelectValue placeholder="Pilih Pelanggan / Vendor" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">-- Tanpa Pihak Ketiga --</SelectItem>
+                        <SelectItem value="__none__">-- Tanpa Pihak Ketiga --</SelectItem>
                         {counterparties.map((cp: CounterpartyResponse) => (
                           <SelectItem key={cp.id} value={cp.id}>
                             {cp.custom_alias || cp.entity_name}
@@ -230,10 +275,10 @@ function NewTransactionPage() {
             <div className="p-4 bg-(--gray-3) rounded-lg border border-(--gray-5) space-y-3">
               <div className="flex justify-between items-center">
                 <label className="text-sm font-medium text-(--gray-12)">Kategori Akuntansi (Opsional)</label>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="2" 
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="2"
                   onClick={handleCategorize}
                   loading={categorizeMutation.isPending}
                 >
@@ -289,7 +334,7 @@ function NewTransactionPage() {
                                 <SelectTrigger className="border-transparent bg-transparent hover:bg-(--gray-3)">
                                   <SelectValue placeholder="Pilih Akun" />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent searchable searchPlaceholder="Cari akun...">
                                   {accounts.filter((a: AccountResponse) => a.level > 1).map((acc: AccountResponse) => (
                                     <SelectItem key={acc.code} value={acc.code}>
                                       {acc.code} - {acc.name}
@@ -301,26 +346,42 @@ function NewTransactionPage() {
                           />
                         </td>
                         <td className="p-2">
-                          <Input 
-                            type="number" 
-                            className="h-8 border-transparent bg-transparent hover:bg-(--gray-3) focus:bg-white dark:focus:bg-black" 
-                            placeholder="0"
-                            {...register(`journal_entries.${index}.debit`)}
+                          <Controller
+                            name={`journal_entries.${index}.debit`}
+                            control={control}
+                            render={({ field }) => (
+                              <CurrencyInput
+                                className="h-8 border-transparent bg-transparent hover:bg-(--gray-3) focus:bg-white dark:focus:bg-black"
+                                placeholder="0"
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                              />
+                            )}
                           />
                         </td>
                         <td className="p-2">
-                          <Input 
-                            type="number" 
-                            className="h-8 border-transparent bg-transparent hover:bg-(--gray-3) focus:bg-white dark:focus:bg-black" 
-                            placeholder="0"
-                            {...register(`journal_entries.${index}.credit`)}
+                          <Controller
+                            name={`journal_entries.${index}.credit`}
+                            control={control}
+                            render={({ field }) => (
+                              <CurrencyInput
+                                className="h-8 border-transparent bg-transparent hover:bg-(--gray-3) focus:bg-white dark:focus:bg-black"
+                                placeholder="0"
+                                value={field.value}
+                                onChange={field.onChange}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                              />
+                            )}
                           />
                         </td>
                         <td className="p-2 text-center">
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            className="h-8 w-8 p-0 text-red-500" 
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-red-500"
                             onClick={() => remove(index)}
                           >
                             <TrashIcon />
@@ -331,11 +392,11 @@ function NewTransactionPage() {
                   </tbody>
                 </table>
               </div>
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="2" 
-                onClick={() => append({ account_code: '', debit: '', credit: '' })}
+              <Button
+                type="button"
+                variant="outline"
+                size="2"
+                onClick={() => append({ account_code: undefined as string | undefined, debit: undefined as string | undefined, credit: undefined as string | undefined })}
               >
                 <PlusIcon className="mr-2" />
                 Tambah Baris Entri
@@ -345,16 +406,16 @@ function NewTransactionPage() {
         )}
 
         <div className="flex justify-end gap-3 pt-6 border-t border-(--gray-6)">
-          <Button 
-            type="button" 
-            variant="ghost" 
+          <Button
+            type="button"
+            variant="ghost"
             onClick={() => navigate({ to: '/accounting/transactions' })}
           >
             Batal
           </Button>
-          <Button 
-            type="submit" 
-            variant="solid" 
+          <Button
+            type="submit"
+            variant="solid"
             loading={createMutation.isPending}
           >
             Simpan Transaksi

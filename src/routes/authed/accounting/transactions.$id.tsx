@@ -19,8 +19,8 @@ function TransactionDetailPage() {
   const navigate = useNavigate()
   const { activeWorkspace } = useWorkspaceStore()
   
-  const { data: trx, isLoading } = useTransaction(activeWorkspace?.id, id)
-  const voidMutation = useVoidTransaction(activeWorkspace?.id)
+  const { data: trx, isLoading } = useTransaction(activeWorkspace?.entity_id, id)
+  const voidMutation = useVoidTransaction(activeWorkspace?.entity_id)
 
   const handleVoid = () => {
     if (confirm('Apakah Anda yakin ingin membatalkan (void) transaksi ini? Jurnal pembalik akan otomatis dibuat.')) {

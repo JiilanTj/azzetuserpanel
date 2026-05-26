@@ -92,39 +92,78 @@ SelectScrollDownButton.displayName = SelectPrimitive.ScrollDownButton.displayNam
 
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
->(({ className, children, position = 'popper', ...props }, ref) => (
-  <SelectPrimitive.Portal>
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content> & {
+    searchable?: boolean
+    searchPlaceholder?: string
+  }
+>(({ className, children, position = 'popper', searchable, searchPlaceholder = 'Cari...', ...props }, ref) => {
+  const [search, setSearch] = React.useState('')
+
+  const extractText = React.useCallback((node: unknown): string => {
+    if (typeof node === 'string') return node
+    if (typeof node === 'number') return String(node)
+    if (Array.isArray(node)) return node.map(extractText).join('')
+    if (React.isValidElement(node)) {
+      return extractText((node.props as Record<string, unknown>)?.children)
+    }
+    return ''
+  }, [])
+
+  const filteredChildren = React.useMemo(() => {
+    if (!searchable || !search) return children
+    return React.Children.toArray(children).filter((child) => {
+      if (!React.isValidElement(child)) return false
+      const childProps = child.props as Record<string, unknown> | undefined
+      if (childProps?.value === '__none__') return true
+      const text = extractText(childProps?.children)
+      return text.toLowerCase().includes(search.toLowerCase())
+    })
+  }, [children, search, searchable])
+
+  return (
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        'relative z-50 max-h-96 min-w-32 overflow-hidden rounded-xl',
+        'relative z-50 max-h-60 min-w-32 overflow-y-auto rounded-xl',
         'border border-(--gray-6) bg-(--gray-1) text-(--gray-12)',
-        'shadow-lg',
+        'shadow-xl',
         'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',
         'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
         'data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2',
-        position === 'popper' &&
         'data-[side=bottom]:translate-y-1 data-[side=top]:-translate-y-1',
         className
       )}
       position={position}
+      collisionPadding={8}
       {...props}
     >
-      <SelectScrollUpButton />
-      <SelectPrimitive.Viewport
-        className={cn(
-          'p-1',
-          position === 'popper' &&
-          'h-(--radix-select-trigger-height) w-full min-w-(--radix-select-trigger-width)'
+        {searchable && (
+          <div className="sticky top-0 z-10 bg-(--gray-1) px-2 pt-2 pb-1">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={searchPlaceholder}
+              className="w-full h-8 px-2.5 rounded-md border border-(--gray-6) bg-(--gray-2) text-sm text-(--gray-12) placeholder:text-(--gray-9) outline-none focus:ring-1 focus:ring-(--blue-8) focus:border-(--blue-8)"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+            />
+          </div>
         )}
-      >
-        {children}
-      </SelectPrimitive.Viewport>
-      <SelectScrollDownButton />
-    </SelectPrimitive.Content>
-  </SelectPrimitive.Portal>
-))
+        <SelectScrollUpButton />
+        <SelectPrimitive.Viewport
+          className={cn(
+            'p-1',
+            position === 'popper' &&
+            'h-(--radix-select-trigger-height) w-full min-w-(--radix-select-trigger-width)'
+          )}
+        >
+          {filteredChildren}
+        </SelectPrimitive.Viewport>
+        <SelectScrollDownButton />
+      </SelectPrimitive.Content>
+    )
+})
 SelectContent.displayName = SelectPrimitive.Content.displayName
 
 const SelectLabel = React.forwardRef<

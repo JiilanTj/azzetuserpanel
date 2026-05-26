@@ -19,34 +19,32 @@ import type {
   LedgerEntryResponse,
 } from '../types'
 
-const wsHeaders = (workspaceId: string) => ({ 'X-Workspace-ID': workspaceId })
-
 export const accountingService = {
   // -------------------------------------------------------
   // Accounts (Chart of Accounts)
   // -------------------------------------------------------
 
-  listAccounts: (workspaceId: string) =>
+  listAccounts: (_workspaceId: string, params?: { include_inactive?: boolean }) =>
     apiClient
-      .get('api/v1/accounts', { headers: wsHeaders(workspaceId) })
+      .get('accounts', { searchParams: params })
       .json<APIResponse<AccountResponse[]>>()
       .then(r => r.data),
 
-  getAccount: (workspaceId: string, id: string) =>
+  getAccount: (_workspaceId: string, id: string) =>
     apiClient
-      .get(`api/v1/accounts/${id}`, { headers: wsHeaders(workspaceId) })
+      .get(`accounts/${id}`)
       .json<APIResponse<AccountResponse>>()
       .then(r => r.data),
 
-  createAccount: (workspaceId: string, body: CreateAccountRequest) =>
+  createAccount: (_workspaceId: string, body: CreateAccountRequest) =>
     apiClient
-      .post('api/v1/accounts', { json: body, headers: wsHeaders(workspaceId) })
+      .post('accounts', { json: body })
       .json<APIResponse<AccountResponse>>()
       .then(r => r.data),
 
-  updateAccount: (workspaceId: string, id: string, body: UpdateAccountRequest) =>
+  updateAccount: (_workspaceId: string, id: string, body: UpdateAccountRequest) =>
     apiClient
-      .patch(`api/v1/accounts/${id}`, { json: body, headers: wsHeaders(workspaceId) })
+      .patch(`accounts/${id}`, { json: body })
       .json<APIResponse<MessageResponse>>()
       .then(r => r.data),
 
@@ -54,33 +52,39 @@ export const accountingService = {
   // Items (Products & Services)
   // -------------------------------------------------------
 
-  listItems: (workspaceId: string) =>
+  listItems: (_workspaceId: string, params?: { include_inactive?: boolean }) =>
     apiClient
-      .get('api/v1/items', { headers: wsHeaders(workspaceId) })
+      .get('items', { searchParams: params })
       .json<APIResponse<ItemResponse[]>>()
       .then(r => r.data),
 
-  getItem: (workspaceId: string, id: string) =>
+  getItem: (_workspaceId: string, id: string) =>
     apiClient
-      .get(`api/v1/items/${id}`, { headers: wsHeaders(workspaceId) })
+      .get(`items/${id}`)
       .json<APIResponse<ItemResponse>>()
       .then(r => r.data),
 
-  createItem: (workspaceId: string, body: CreateItemRequest) =>
+  createItem: (_workspaceId: string, body: CreateItemRequest) =>
     apiClient
-      .post('api/v1/items', { json: body, headers: wsHeaders(workspaceId) })
+      .post('items', { json: body })
       .json<APIResponse<ItemResponse>>()
       .then(r => r.data),
 
-  updateItem: (workspaceId: string, id: string, body: UpdateItemRequest) =>
+  updateItem: (_workspaceId: string, id: string, body: UpdateItemRequest) =>
     apiClient
-      .patch(`api/v1/items/${id}`, { json: body, headers: wsHeaders(workspaceId) })
+      .patch(`items/${id}`, { json: body })
       .json<APIResponse<MessageResponse>>()
       .then(r => r.data),
 
-  deleteItem: (workspaceId: string, id: string) =>
+  deleteItem: (_workspaceId: string, id: string) =>
     apiClient
-      .delete(`api/v1/items/${id}`, { headers: wsHeaders(workspaceId) })
+      .delete(`items/${id}`)
+      .json<APIResponse<MessageResponse>>()
+      .then(r => r.data),
+
+  reactivateItem: (_workspaceId: string, id: string) =>
+    apiClient
+      .post(`items/${id}/reactivate`)
       .json<APIResponse<MessageResponse>>()
       .then(r => r.data),
 
@@ -88,33 +92,33 @@ export const accountingService = {
   // Transactions
   // -------------------------------------------------------
 
-  listTransactions: (workspaceId: string) =>
+  listTransactions: (_workspaceId: string) =>
     apiClient
-      .get('api/v1/transactions', { headers: wsHeaders(workspaceId) })
+      .get('transactions')
       .json<APIResponse<TransactionResponse[]>>()
       .then(r => r.data),
 
-  getTransaction: (workspaceId: string, id: string) =>
+  getTransaction: (_workspaceId: string, id: string) =>
     apiClient
-      .get(`api/v1/transactions/${id}`, { headers: wsHeaders(workspaceId) })
+      .get(`transactions/${id}`)
       .json<APIResponse<TransactionResponse>>()
       .then(r => r.data),
 
-  createTransaction: (workspaceId: string, body: CreateTransactionRequest) =>
+  createTransaction: (_workspaceId: string, body: CreateTransactionRequest) =>
     apiClient
-      .post('api/v1/transactions', { json: body, headers: wsHeaders(workspaceId) })
+      .post('transactions', { json: body })
       .json<APIResponse<TransactionResponse>>()
       .then(r => r.data),
 
-  categorizeTransaction: (workspaceId: string, body: CategorizationRequest) =>
+  categorizeTransaction: (_workspaceId: string, body: CategorizationRequest) =>
     apiClient
-      .post('api/v1/transactions/categorize', { json: body, headers: wsHeaders(workspaceId) })
+      .post('transactions/categorize', { json: body })
       .json<APIResponse<CategorizationResult>>()
       .then(r => r.data),
 
-  voidTransaction: (workspaceId: string, id: string) =>
+  voidTransaction: (_workspaceId: string, id: string) =>
     apiClient
-      .post(`api/v1/transactions/${id}/void`, { headers: wsHeaders(workspaceId) })
+      .post(`transactions/${id}/void`)
       .json<APIResponse<MessageResponse>>()
       .then(r => r.data),
 
@@ -122,46 +126,41 @@ export const accountingService = {
   // Reports
   // -------------------------------------------------------
 
-  getTrialBalance: (workspaceId: string, periodFrom: string, periodTo: string) =>
+  getTrialBalance: (_workspaceId: string, periodFrom: string, periodTo: string) =>
     apiClient
-      .get('api/v1/reports/trial-balance', { 
-        headers: wsHeaders(workspaceId),
+      .get('reports/trial-balance', {
         searchParams: { period_from: periodFrom, period_to: periodTo }
       })
       .json<APIResponse<TrialBalanceEntry[]>>()
       .then(r => r.data),
 
-  getBalanceSheet: (workspaceId: string, period: string) =>
+  getBalanceSheet: (_workspaceId: string, period: string) =>
     apiClient
-      .get('api/v1/reports/balance-sheet', { 
-        headers: wsHeaders(workspaceId),
+      .get('reports/balance-sheet', {
         searchParams: { period }
       })
       .json<APIResponse<BalanceSheetReport>>()
       .then(r => r.data),
 
-  getIncomeStatement: (workspaceId: string, periodFrom: string, periodTo: string) =>
+  getIncomeStatement: (_workspaceId: string, periodFrom: string, periodTo: string) =>
     apiClient
-      .get('api/v1/reports/income-statement', { 
-        headers: wsHeaders(workspaceId),
+      .get('reports/income-statement', {
         searchParams: { period_from: periodFrom, period_to: periodTo }
       })
       .json<APIResponse<IncomeStatementReport>>()
       .then(r => r.data),
 
-  getCashFlow: (workspaceId: string, dateFrom: string, dateTo: string) =>
+  getCashFlow: (_workspaceId: string, dateFrom: string, dateTo: string) =>
     apiClient
-      .get('api/v1/reports/cash-flow', { 
-        headers: wsHeaders(workspaceId),
+      .get('reports/cash-flow', {
         searchParams: { date_from: dateFrom, date_to: dateTo }
       })
       .json<APIResponse<CashFlowEntry[]>>()
       .then(r => r.data),
 
-  getLedger: (workspaceId: string, accountId: string, limit = 50, offset = 0) =>
+  getLedger: (_workspaceId: string, accountId: string, limit = 50, offset = 0) =>
     apiClient
-      .get(`api/v1/reports/ledger/${accountId}`, { 
-        headers: wsHeaders(workspaceId),
+      .get(`reports/ledger/${accountId}`, {
         searchParams: { limit: String(limit), offset: String(offset) }
       })
       .json<APIResponse<LedgerEntryResponse[]>>()

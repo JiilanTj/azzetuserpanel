@@ -35,10 +35,10 @@ export const accountingKeys = {
 // Accounts
 // -------------------------------------------------------
 
-export function useAccounts(workspaceId?: string) {
+export function useAccounts(workspaceId?: string, includeInactive = false) {
   return useQuery({
-    queryKey: accountingKeys.accounts(workspaceId ?? ''),
-    queryFn: () => accountingService.listAccounts(workspaceId!),
+    queryKey: [...accountingKeys.accounts(workspaceId ?? ''), includeInactive],
+    queryFn: () => accountingService.listAccounts(workspaceId!, { include_inactive: includeInactive }),
     enabled: !!workspaceId,
   })
 }
@@ -89,10 +89,10 @@ export function useUpdateAccount(workspaceId?: string) {
 // Items
 // -------------------------------------------------------
 
-export function useItems(workspaceId?: string) {
+export function useItems(workspaceId?: string, includeInactive = false) {
   return useQuery({
-    queryKey: accountingKeys.items(workspaceId ?? ''),
-    queryFn: () => accountingService.listItems(workspaceId!),
+    queryKey: [...accountingKeys.items(workspaceId ?? ''), includeInactive],
+    queryFn: () => accountingService.listItems(workspaceId!, { include_inactive: includeInactive }),
     enabled: !!workspaceId,
   })
 }
@@ -139,10 +139,26 @@ export function useDeleteItem(workspaceId?: string) {
       if (workspaceId) {
         qc.invalidateQueries({ queryKey: accountingKeys.items(workspaceId) })
       }
-      toast.success('Katalog item berhasil dihapus.')
+      toast.success('Katalog item berhasil dinonaktifkan.')
     },
     onError: (err) => {
-      toast.error('Gagal menghapus katalog item', { description: extractErrorMessage(err) })
+      toast.error('Gagal menonaktifkan item', { description: extractErrorMessage(err) })
+    },
+  })
+}
+
+export function useReactivateItem(workspaceId?: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => accountingService.reactivateItem(workspaceId!, id),
+    onSuccess: () => {
+      if (workspaceId) {
+        qc.invalidateQueries({ queryKey: accountingKeys.items(workspaceId) })
+      }
+      toast.success('Katalog item berhasil diaktifkan kembali.')
+    },
+    onError: (err) => {
+      toast.error('Gagal mengaktifkan item', { description: extractErrorMessage(err) })
     },
   })
 }
