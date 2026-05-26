@@ -70,12 +70,17 @@ const statusConfig: Record<
 // schemas imported from @/lib/validations
 
 const AVAILABLE_PERMISSIONS = [
-  { value: "transaction:create", label: "Buat Transaksi" },
-  { value: "transaction:read", label: "Lihat Transaksi" },
-  { value: "report:read", label: "Lihat Laporan Keuangan" },
-  { value: "contact:manage", label: "Kelola Kontak / Pihak Ketiga" },
-  { value: "member:manage", label: "Kelola Anggota / Tim" },
-  { value: "billing:manage", label: "Kelola Langganan & Billing" },
+  { value: "member:invite", label: "Undang Anggota", description: "Mengirim & membatalkan undangan anggota" },
+  { value: "member:manage", label: "Kelola Anggota", description: "Update alias & status anggota" },
+  { value: "member:remove", label: "Hapus Anggota", description: "Mengeluarkan anggota dari workspace" },
+  { value: "role:create", label: "Buat Role", description: "Membuat role kustom baru" },
+  { value: "role:update", label: "Edit Role", description: "Mengubah nama & permission role" },
+  { value: "role:delete", label: "Hapus Role", description: "Menghapus role kustom" },
+  { value: "role:assign", label: "Assign Role", description: "Memasang & melepas role ke anggota" },
+  { value: "transaction:create", label: "Buat Transaksi", description: "Buat transaksi, items, akun, kategorisasi" },
+  { value: "transaction:read", label: "Lihat Transaksi", description: "Melihat transaksi, items, COA" },
+  { value: "transaction:void", label: "Void Transaksi", description: "Membatalkan transaksi (jurnal pembalik)" },
+  { value: "report:read", label: "Lihat Laporan", description: "Melihat semua laporan keuangan" },
 ];
 
 function UsersPage() {
@@ -742,18 +747,32 @@ function RolesSection() {
               <label className="text-sm font-medium text-(--gray-12)">
                 Daftar Hak Akses (Izin)
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border border-(--gray-4) rounded-xl p-3 bg-(--gray-1)">
-                {AVAILABLE_PERMISSIONS.map((perm) => (
-                  <label key={perm.value} className="flex items-center gap-2 text-xs text-(--gray-11) hover:text-(--gray-12) cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={selectedPermissions.includes(perm.value)}
-                      onChange={(e) => handleCheckboxChange(perm.value, e.target.checked)}
-                      className="rounded border-(--gray-6) text-(--blue-9) focus:ring-(--blue-9)"
-                    />
-                    {perm.label}
-                  </label>
-                ))}
+              <div className="grid grid-cols-1 gap-1.5 border border-(--gray-6) rounded-xl p-3 bg-(--gray-2)">
+                {AVAILABLE_PERMISSIONS.map((perm) => {
+                  const checked = selectedPermissions.includes(perm.value)
+                  return (
+                    <label
+                      key={perm.value}
+                      className={cn(
+                        'flex items-start gap-3 p-2 rounded-lg cursor-pointer select-none transition-colors border',
+                        checked
+                          ? 'bg-(--blue-3) border-(--blue-5) text-(--blue-11)'
+                          : 'bg-transparent border-transparent hover:bg-(--gray-3) text-(--gray-11)'
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => handleCheckboxChange(perm.value, e.target.checked)}
+                        className="mt-0.5 rounded border-(--gray-6) text-(--blue-9) focus:ring-(--blue-9) accent-(--blue-9)"
+                      />
+                      <div>
+                        <span className="text-xs font-semibold">{perm.label}</span>
+                        <p className="text-[10px] text-(--gray-10) mt-0.5 leading-relaxed">{perm.description}</p>
+                      </div>
+                    </label>
+                  )
+                })}
               </div>
               {errors.permissions && (
                 <p className="text-xs text-red-500">{errors.permissions.message}</p>
