@@ -13,11 +13,22 @@ import {
   ArchiveIcon,
   ReaderIcon,
   ChatBubbleIcon,
+  CaretSortIcon,
 } from '@radix-ui/react-icons'
 import { useAuthStore } from '@/stores/auth.store'
+import { useWorkspaceStore } from '@/stores/workspace.store'
+import { useWorkspaces } from '@/hooks/use-workspace'
 import { useLogout } from '@/hooks/use-auth'
 import { cn } from '@/lib/utils'
 import logoSvg from '@/assets/logo.svg'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui'
 
 // -------------------------------------------------------
 // Navigation definition
@@ -61,6 +72,10 @@ const BOTTOM_ITEMS: NavItem[] = [
 
 export function Sidebar() {
   useAuthStore()
+  const { activeWorkspace, setActiveWorkspace } = useWorkspaceStore()
+  const { data: workspaces } = useWorkspaces()
+  const workspaceList = workspaces || []
+  
   const logoutMutation = useLogout()
   const currentPath = useRouterState({ select: s => s.location.pathname })
   const [collapsed, setCollapsed] = useState(false)
@@ -180,15 +195,85 @@ export function Sidebar() {
       )}
     >
       {/* Logo */}
-      <div className={cn('flex items-center h-14', collapsed ? 'justify-center px-2' : 'gap-2.5 px-5')}>
+      <div className={cn('flex items-center h-14 shrink-0', collapsed ? 'justify-center px-2' : 'gap-2.5 px-5')}>
         <img src={logoSvg} alt="Azzet" className="h-7 w-7 shrink-0" />
         {!collapsed && (
           <span className="text-[15px] font-bold text-[#1a1a1a] dark:text-white tracking-tight">Azzet</span>
         )}
       </div>
 
+      {/* Workspace Badge — expanded & collapsed */}
+      {activeWorkspace && (
+        <div className={cn('shrink-0', collapsed ? 'px-2 pb-3 pt-2 flex justify-center' : 'px-3 pb-6 pt-3')}>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              {collapsed ? (
+                /* Collapsed: compact avatar only, dropdown opens right */
+                <button
+                  className="w-10 h-10 rounded-xl bg-(--blue-9) text-white flex items-center justify-center text-sm font-bold cursor-pointer hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-(--blue-9) focus:ring-offset-2"
+                  title={activeWorkspace.entity_name}
+                >
+                  {activeWorkspace.entity_name.charAt(0).toUpperCase()}
+                </button>
+              ) : (
+                /* Expanded: full card */
+                <div className="flex items-center justify-between bg-white dark:bg-[#1a1a1a] border border-[#e5e7eb] dark:border-[#333] rounded-xl px-2.5 py-2 cursor-pointer shadow-sm hover:bg-gray-50 dark:hover:bg-[#222] transition-colors focus:outline-none focus:ring-2 focus:ring-(--blue-9) focus:ring-offset-1">
+                  <div className="flex items-center gap-2.5 overflow-hidden">
+                    <div className="w-8 h-8 rounded-lg bg-(--blue-9) text-white flex items-center justify-center text-sm font-bold shrink-0">
+                      {activeWorkspace.entity_name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex flex-col items-start overflow-hidden leading-tight">
+                      <span className="text-[13px] font-bold text-gray-900 dark:text-white truncate max-w-[120px]">
+                        {activeWorkspace.entity_name}
+                      </span>
+                      <span className="text-[10px] font-medium text-(--blue-9) bg-(--blue-3) px-1.5 py-0.5 rounded-sm mt-0.5 truncate">
+                        {activeWorkspace.plan_name || 'Free Plan'}
+                      </span>
+                    </div>
+                  </div>
+                  <CaretSortIcon className="w-4 h-4 text-gray-400 shrink-0" />
+                </div>
+              )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-[220px]"
+              align="start"
+              side={collapsed ? 'right' : 'bottom'}
+              alignOffset={collapsed ? -8 : -8}
+              sideOffset={collapsed ? 8 : 8}
+            >
+              <DropdownMenuLabel className="text-xs text-gray-500 font-normal">Pilih Workspace</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {workspaceList.map((ws) => (
+                <DropdownMenuItem 
+                  key={ws.id} 
+                  className={cn(
+                    "flex items-center gap-2.5 cursor-pointer py-2",
+                    ws.id === activeWorkspace.id && "bg-(--blue-3) text-(--blue-11) focus:bg-(--blue-4)"
+                  )}
+                  onClick={() => setActiveWorkspace(ws)}
+                >
+                  <div className={cn(
+                    "w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold shrink-0",
+                    ws.id === activeWorkspace.id 
+                      ? "bg-(--blue-9) text-white" 
+                      : "bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
+                  )}>
+                    {ws.entity_name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex flex-col flex-1 overflow-hidden">
+                    <span className="text-xs font-semibold truncate">{ws.entity_name}</span>
+                    <span className="text-[10px] opacity-80">{ws.role}</span>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
       {/* Main nav */}
-      <nav className={cn('flex-1 flex flex-col gap-0.5 overflow-y-auto', collapsed ? 'px-2 py-3' : 'px-3 py-3')}>
+      <nav className={cn('flex-1 flex flex-col gap-0.5 overflow-y-auto', collapsed ? 'px-2 py-1' : 'px-3 py-1')}>
         {NAV_ITEMS.map(renderNavItem)}
       </nav>
 
