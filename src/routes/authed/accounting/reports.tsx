@@ -40,11 +40,21 @@ function formatCurrency(amount: string | number) {
 }
 
 // ----------------------------------------------------------------------
+// Constants for Default Periods
+// ----------------------------------------------------------------------
+const currentDate = new Date()
+const currentYear = currentDate.getFullYear()
+const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0')
+const DEFAULT_PERIOD = `${currentYear}-${currentMonth}`
+const DEFAULT_DATE_FROM = `${DEFAULT_PERIOD}-01`
+const DEFAULT_DATE_TO = new Date(currentYear, currentDate.getMonth() + 1, 0).toISOString().split('T')[0]
+
+// ----------------------------------------------------------------------
 // Sub-components for each report
 // ----------------------------------------------------------------------
 
 function TrialBalanceView({ workspaceId }: { workspaceId: string }) {
-  const { data, isLoading } = useTrialBalance(workspaceId)
+  const { data, isLoading } = useTrialBalance(workspaceId, DEFAULT_PERIOD, DEFAULT_PERIOD)
   
   if (isLoading) return <div className="py-12 text-center text-(--gray-11)">Memuat Neraca Saldo...</div>
   if (!data || !Array.isArray(data) || data.length === 0) return <div className="py-12 text-center text-(--gray-11)">Data tidak tersedia.</div>
@@ -88,7 +98,7 @@ function TrialBalanceView({ workspaceId }: { workspaceId: string }) {
 }
 
 function BalanceSheetView({ workspaceId }: { workspaceId: string }) {
-  const { data, isLoading } = useBalanceSheet(workspaceId)
+  const { data, isLoading } = useBalanceSheet(workspaceId, DEFAULT_PERIOD)
   
   if (isLoading) return <div className="py-12 text-center text-(--gray-11)">Memuat Neraca...</div>
   if (!data) return <div className="py-12 text-center text-(--gray-11)">Data tidak tersedia.</div>
@@ -156,7 +166,7 @@ function BalanceSheetView({ workspaceId }: { workspaceId: string }) {
 }
 
 function IncomeStatementView({ workspaceId }: { workspaceId: string }) {
-  const { data, isLoading } = useIncomeStatement(workspaceId)
+  const { data, isLoading } = useIncomeStatement(workspaceId, DEFAULT_PERIOD, DEFAULT_PERIOD)
   
   if (isLoading) return <div className="py-12 text-center text-(--gray-11)">Memuat Laba Rugi...</div>
   if (!data) return <div className="py-12 text-center text-(--gray-11)">Data tidak tersedia.</div>
@@ -221,7 +231,7 @@ function IncomeStatementView({ workspaceId }: { workspaceId: string }) {
 }
 
 function CashFlowView({ workspaceId }: { workspaceId: string }) {
-  const { data, isLoading } = useCashFlow(workspaceId)
+  const { data, isLoading } = useCashFlow(workspaceId, DEFAULT_DATE_FROM, DEFAULT_DATE_TO)
   
   if (isLoading) return <div className="py-12 text-center text-(--gray-11)">Memuat Arus Kas...</div>
   if (!data || !Array.isArray(data) || data.length === 0) return <div className="py-12 text-center text-(--gray-11)">Data tidak tersedia.</div>

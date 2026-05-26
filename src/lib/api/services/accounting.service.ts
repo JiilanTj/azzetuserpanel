@@ -122,33 +122,48 @@ export const accountingService = {
   // Reports
   // -------------------------------------------------------
 
-  getTrialBalance: (workspaceId: string) =>
+  getTrialBalance: (workspaceId: string, periodFrom: string, periodTo: string) =>
     apiClient
-      .get('api/v1/reports/trial-balance', { headers: wsHeaders(workspaceId) })
+      .get('api/v1/reports/trial-balance', { 
+        headers: wsHeaders(workspaceId),
+        searchParams: { period_from: periodFrom, period_to: periodTo }
+      })
       .json<APIResponse<TrialBalanceEntry[]>>()
       .then(r => r.data),
 
-  getBalanceSheet: (workspaceId: string) =>
+  getBalanceSheet: (workspaceId: string, period: string) =>
     apiClient
-      .get('api/v1/reports/balance-sheet', { headers: wsHeaders(workspaceId) })
+      .get('api/v1/reports/balance-sheet', { 
+        headers: wsHeaders(workspaceId),
+        searchParams: { period }
+      })
       .json<APIResponse<BalanceSheetReport>>()
       .then(r => r.data),
 
-  getIncomeStatement: (workspaceId: string) =>
+  getIncomeStatement: (workspaceId: string, periodFrom: string, periodTo: string) =>
     apiClient
-      .get('api/v1/reports/income-statement', { headers: wsHeaders(workspaceId) })
+      .get('api/v1/reports/income-statement', { 
+        headers: wsHeaders(workspaceId),
+        searchParams: { period_from: periodFrom, period_to: periodTo }
+      })
       .json<APIResponse<IncomeStatementReport>>()
       .then(r => r.data),
 
-  getCashFlow: (workspaceId: string) =>
+  getCashFlow: (workspaceId: string, dateFrom: string, dateTo: string) =>
     apiClient
-      .get('api/v1/reports/cash-flow', { headers: wsHeaders(workspaceId) })
+      .get('api/v1/reports/cash-flow', { 
+        headers: wsHeaders(workspaceId),
+        searchParams: { date_from: dateFrom, date_to: dateTo }
+      })
       .json<APIResponse<CashFlowEntry[]>>()
       .then(r => r.data),
 
-  getLedger: (workspaceId: string, accountId: string) =>
+  getLedger: (workspaceId: string, accountId: string, limit = 50, offset = 0) =>
     apiClient
-      .get(`api/v1/reports/ledger/${accountId}`, { headers: wsHeaders(workspaceId) })
+      .get(`api/v1/reports/ledger/${accountId}`, { 
+        headers: wsHeaders(workspaceId),
+        searchParams: { limit: String(limit), offset: String(offset) }
+      })
       .json<APIResponse<LedgerEntryResponse[]>>()
       .then(r => r.data),
 }

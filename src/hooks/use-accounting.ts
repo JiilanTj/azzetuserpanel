@@ -24,11 +24,11 @@ export const accountingKeys = {
   transactions: (workspaceId: string) => [...accountingKeys.all, workspaceId, 'transactions'] as const,
   transactionDetail: (workspaceId: string, id: string) => [...accountingKeys.transactions(workspaceId), id] as const,
   reports: (workspaceId: string) => [...accountingKeys.all, workspaceId, 'reports'] as const,
-  trialBalance: (workspaceId: string) => [...accountingKeys.reports(workspaceId), 'trial-balance'] as const,
-  balanceSheet: (workspaceId: string) => [...accountingKeys.reports(workspaceId), 'balance-sheet'] as const,
-  incomeStatement: (workspaceId: string) => [...accountingKeys.reports(workspaceId), 'income-statement'] as const,
-  cashFlow: (workspaceId: string) => [...accountingKeys.reports(workspaceId), 'cash-flow'] as const,
-  ledger: (workspaceId: string, accountId: string) => [...accountingKeys.reports(workspaceId), 'ledger', accountId] as const,
+  trialBalance: (workspaceId: string, periodFrom: string, periodTo: string) => [...accountingKeys.reports(workspaceId), 'trial-balance', periodFrom, periodTo] as const,
+  balanceSheet: (workspaceId: string, period: string) => [...accountingKeys.reports(workspaceId), 'balance-sheet', period] as const,
+  incomeStatement: (workspaceId: string, periodFrom: string, periodTo: string) => [...accountingKeys.reports(workspaceId), 'income-statement', periodFrom, periodTo] as const,
+  cashFlow: (workspaceId: string, dateFrom: string, dateTo: string) => [...accountingKeys.reports(workspaceId), 'cash-flow', dateFrom, dateTo] as const,
+  ledger: (workspaceId: string, accountId: string, limit: number, offset: number) => [...accountingKeys.reports(workspaceId), 'ledger', accountId, limit, offset] as const,
 }
 
 // -------------------------------------------------------
@@ -216,42 +216,42 @@ export function useVoidTransaction(workspaceId?: string) {
 // Reports
 // -------------------------------------------------------
 
-export function useTrialBalance(workspaceId?: string) {
+export function useTrialBalance(workspaceId?: string, periodFrom?: string, periodTo?: string) {
   return useQuery({
-    queryKey: accountingKeys.trialBalance(workspaceId ?? ''),
-    queryFn: () => accountingService.getTrialBalance(workspaceId!),
-    enabled: !!workspaceId,
+    queryKey: accountingKeys.trialBalance(workspaceId ?? '', periodFrom ?? '', periodTo ?? ''),
+    queryFn: () => accountingService.getTrialBalance(workspaceId!, periodFrom!, periodTo!),
+    enabled: !!workspaceId && !!periodFrom && !!periodTo,
   })
 }
 
-export function useBalanceSheet(workspaceId?: string) {
+export function useBalanceSheet(workspaceId?: string, period?: string) {
   return useQuery({
-    queryKey: accountingKeys.balanceSheet(workspaceId ?? ''),
-    queryFn: () => accountingService.getBalanceSheet(workspaceId!),
-    enabled: !!workspaceId,
+    queryKey: accountingKeys.balanceSheet(workspaceId ?? '', period ?? ''),
+    queryFn: () => accountingService.getBalanceSheet(workspaceId!, period!),
+    enabled: !!workspaceId && !!period,
   })
 }
 
-export function useIncomeStatement(workspaceId?: string) {
+export function useIncomeStatement(workspaceId?: string, periodFrom?: string, periodTo?: string) {
   return useQuery({
-    queryKey: accountingKeys.incomeStatement(workspaceId ?? ''),
-    queryFn: () => accountingService.getIncomeStatement(workspaceId!),
-    enabled: !!workspaceId,
+    queryKey: accountingKeys.incomeStatement(workspaceId ?? '', periodFrom ?? '', periodTo ?? ''),
+    queryFn: () => accountingService.getIncomeStatement(workspaceId!, periodFrom!, periodTo!),
+    enabled: !!workspaceId && !!periodFrom && !!periodTo,
   })
 }
 
-export function useCashFlow(workspaceId?: string) {
+export function useCashFlow(workspaceId?: string, dateFrom?: string, dateTo?: string) {
   return useQuery({
-    queryKey: accountingKeys.cashFlow(workspaceId ?? ''),
-    queryFn: () => accountingService.getCashFlow(workspaceId!),
-    enabled: !!workspaceId,
+    queryKey: accountingKeys.cashFlow(workspaceId ?? '', dateFrom ?? '', dateTo ?? ''),
+    queryFn: () => accountingService.getCashFlow(workspaceId!, dateFrom!, dateTo!),
+    enabled: !!workspaceId && !!dateFrom && !!dateTo,
   })
 }
 
-export function useLedger(workspaceId?: string, accountId?: string) {
+export function useLedger(workspaceId?: string, accountId?: string, limit = 50, offset = 0) {
   return useQuery({
-    queryKey: accountingKeys.ledger(workspaceId ?? '', accountId ?? ''),
-    queryFn: () => accountingService.getLedger(workspaceId!, accountId!),
+    queryKey: accountingKeys.ledger(workspaceId ?? '', accountId ?? '', limit, offset),
+    queryFn: () => accountingService.getLedger(workspaceId!, accountId!, limit, offset),
     enabled: !!workspaceId && !!accountId,
   })
 }
