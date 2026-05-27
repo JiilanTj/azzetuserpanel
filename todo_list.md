@@ -100,7 +100,7 @@ Ini adalah porsi pekerjaan terbesar yang belum disentuh sama sekali di frontend.
     - [x] `GET /api/v1/reports/cash-flow` (Arus Kas).
     - [x] `GET /api/v1/reports/ledger/{account_id}` (Buku Besar per akun).
 
-- [ ] **Halaman UI Baru:**
+- [X] **Halaman UI Baru:**
   - [x] `/accounts`: Halaman Chart of Accounts (COA) / Daftar Akun (List Selesai ✅, Modal Tambah/Edit Selesai ✅).
   - [x] `/items`: Halaman katalog produk & jasa (Daftar Item & Modal Form Selesai ✅).
   - [x] `/transactions`: Halaman jurnal & riwayat transaksi bisnis (Daftar & Void Selesai ✅).
