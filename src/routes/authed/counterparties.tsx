@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { createRoute } from "@tanstack/react-router";
+import { createRoute, Link } from "@tanstack/react-router";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -14,6 +14,8 @@ import {
   useAddCounterparty,
   useSearchEntities,
 } from "@/hooks/use-workspace";
+import { useSetCounterpartyAlias } from "@/hooks/use-identity";
+import { counterpartyAliasSchema, type CounterpartyAliasForm } from "@/lib/validations";
 import {
   Button,
   Input,
@@ -41,6 +43,7 @@ import {
   AvatarIcon,
   HomeIcon,
   CheckIcon,
+  Pencil1Icon,
 } from "@radix-ui/react-icons";
 
 export const counterpartiesRoute = createRoute({
@@ -61,6 +64,11 @@ function CounterpartiesPage() {
     "ALL",
   );
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [editAliasTarget, setEditAliasTarget] = useState<{
+    entity_id: string;
+    entity_name: string;
+    custom_alias?: string;
+  } | null>(null);
 
   const filteredData = counterparties?.filter(
     (c) => filterType === "ALL" || c.relation_type === filterType,
@@ -143,6 +151,9 @@ function CounterpartiesPage() {
                   <th className="text-left px-6 py-3 text-xs font-semibold text-(--gray-11) uppercase tracking-wider">
                     Ditambahkan
                   </th>
+                  <th className="text-right px-6 py-3 text-xs font-semibold text-(--gray-11) uppercase tracking-wider">
+                    Aksi
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -202,6 +213,31 @@ function CounterpartiesPage() {
                         year: "numeric",
                       })}
                     </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="1"
+                          title="Edit alias"
+                          onClick={() =>
+                            setEditAliasTarget({
+                              entity_id: cp.entity_id,
+                              entity_name: cp.entity_name,
+                              custom_alias: cp.custom_alias,
+                            })
+                          }
+                        >
+                          <Pencil1Icon className="h-3.5 w-3.5" />
+                        </Button>
+                        {cp.is_shadow && (
+                          <Link to="/claims">
+                            <Button variant="ghost" size="1" title="Klaim entitas">
+                              Klaim
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -214,6 +250,14 @@ function CounterpartiesPage() {
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
       />
+      {editAliasTarget && activeWorkspace && (
+        <EditAliasDialog
+          open={!!editAliasTarget}
+          onOpenChange={(open) => !open && setEditAliasTarget(null)}
+          workspaceId={activeWorkspace.entity_id}
+          target={editAliasTarget}
+        />
+      )}
     </div>
   );
 }
@@ -497,5 +541,70 @@ function ManualCounterpartyForm({ onSuccess, mutation }: { onSuccess: () => void
         </Button>
       </div>
     </form>
+  );
+}
+
+function EditAliasDialog({
+  open,
+  onOpenChange,
+  workspaceId,
+  target,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  workspaceId: string;
+  target: { entity_id: string; entity_name: string; custom_alias?: string };
+}) {
+  const setAliasMutation = useSetCounterpartyAlias(workspaceId);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CounterpartyAliasForm>({
+    resolver: zodResolver(counterpartyAliasSchema),
+    defaultValues: { custom_alias: target.custom_alias || target.entity_name },
+  });
+
+  useEffect(() => {
+    reset({ custom_alias: target.custom_alias || target.entity_name });
+  }, [target, reset]);
+
+  const onSubmit = handleSubmit(async (data) => {
+    await setAliasMutation.mutateAsync({
+      entity_id: target.entity_id,
+      custom_alias: data.custom_alias,
+    });
+    onOpenChange(false);
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit Alias Pihak Ketiga</DialogTitle>
+          <DialogDescription>
+            Alias kustom untuk <strong>{target.entity_name}</strong> di workspace Anda.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-4 pt-2">
+          <Input
+            label="Alias Kustom"
+            placeholder="Nama panggilan di workspace..."
+            error={!!errors.custom_alias}
+            errorMessage={errors.custom_alias?.message}
+            {...register("custom_alias")}
+          />
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+              Batal
+            </Button>
+            <Button type="submit" variant="solid" loading={setAliasMutation.isPending}>
+              Simpan Alias
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

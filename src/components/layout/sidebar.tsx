@@ -14,6 +14,7 @@ import {
   ReaderIcon,
   ChatBubbleIcon,
   CaretSortIcon,
+  CheckCircledIcon,
 } from '@radix-ui/react-icons'
 import { useAuthStore } from '@/stores/auth.store'
 import { useWorkspaceStore } from '@/stores/workspace.store'
@@ -56,6 +57,7 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   { to: '/counterparties', label: 'Pihak Ketiga', Icon: ArchiveIcon },
+  { to: '/claims', label: 'Klaim Entitas', Icon: CheckCircledIcon },
   { to: '/users', label: 'Anggota Tim', Icon: PersonIcon },
   { to: '/subscription', label: 'Langganan', Icon: LayersIcon },
   { to: '/settings', label: 'Pengaturan', Icon: GearIcon },

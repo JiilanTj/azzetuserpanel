@@ -36,6 +36,7 @@ import {
   PersonIcon,
   FileTextIcon,
 } from "@radix-ui/react-icons";
+import { EntityIdentitySection } from "@/components/identity/entity-identity-section";
 
 export const settingsRoute = createRoute({
   getParentRoute: () => authedLayout,
@@ -62,6 +63,7 @@ function SettingsPage() {
 
       <ProfileSection />
       {activeWorkspace && <EntityProfileSection workspace={activeWorkspace} />}
+      {activeWorkspace && <EntityIdentitySection entityId={activeWorkspace.entity_id} />}
       <PasswordSection />
       <SessionsSection />
     </div>

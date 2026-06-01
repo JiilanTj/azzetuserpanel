@@ -20,6 +20,8 @@ import { usersRoute } from './routes/authed/users'
 import { billingRoute } from './routes/authed/billing'
 import { settingsRoute } from './routes/authed/settings'
 import { counterpartiesRoute } from './routes/authed/counterparties'
+import { claimsRoute } from './routes/authed/claims'
+import { claimDetailRoute } from './routes/authed/claims.$id'
 import { subscriptionRoute } from './routes/authed/subscription'
 
 // Accounting module routes
@@ -56,6 +58,8 @@ const routeTree = rootRoute.addChildren([
     billingRoute,
     settingsRoute,
     counterpartiesRoute,
+    claimsRoute,
+    claimDetailRoute,
     subscriptionRoute,
     // Accounting
     accountsRoute,
