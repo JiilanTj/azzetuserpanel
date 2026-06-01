@@ -32,6 +32,7 @@ import { newTransactionRoute } from './routes/authed/accounting/transactions.new
 import { transactionDetailRoute } from './routes/authed/accounting/transactions.$id'
 import { reportsRoute } from './routes/authed/accounting/reports'
 import { documentsRoute } from './routes/authed/accounting/documents'
+import { taxRoute } from './routes/authed/accounting/tax'
 
 const routeTree = rootRoute.addChildren([
   // Public routes
@@ -70,6 +71,7 @@ const routeTree = rootRoute.addChildren([
     transactionDetailRoute,
     reportsRoute,
     documentsRoute,
+    taxRoute,
   ]),
 ])
 

@@ -55,6 +55,7 @@ const NAV_ITEMS: NavItem[] = [
       { to: '/accounting/items', label: 'Barang & Jasa' },
       { to: '/accounting/reports', label: 'Laporan' },
       { to: '/accounting/documents', label: 'Dokumen & OCR' },
+      { to: '/accounting/tax', label: 'Pajak' },
     ],
   },
   { to: '/counterparties', label: 'Pihak Ketiga', Icon: ArchiveIcon },
