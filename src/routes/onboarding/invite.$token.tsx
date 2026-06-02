@@ -1,8 +1,11 @@
 import { createRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { rootRoute } from '../__root'
 import { authMiddleware } from '@/middleware/auth.middleware'
 import { workspaceService } from '@/lib/api/services'
+import { extractErrorMessage } from '@/lib/api/errors'
+import { workspaceKeys } from '@/hooks/use-workspace'
 import { Button } from '@/components/ui'
 import { CheckCircledIcon, CrossCircledIcon } from '@radix-ui/react-icons'
 import logoSvg from '@/assets/logo.svg'
@@ -18,6 +21,7 @@ type InviteStatus = 'loading' | 'success' | 'error'
 
 function InvitePage() {
   const navigate = useNavigate()
+  const qc = useQueryClient()
   const { token } = inviteRoute.useParams()
   const [status, setStatus] = useState<InviteStatus>(() => token ? 'loading' : 'error')
   const [message, setMessage] = useState(() => token ? '' : 'Token undangan tidak valid.')
@@ -28,20 +32,17 @@ function InvitePage() {
     async function acceptInvite() {
       try {
         const resp = await workspaceService.acceptInvite(token)
+        await qc.invalidateQueries({ queryKey: workspaceKeys.workspaces() })
         setStatus('success')
         setMessage(resp.message || 'Undangan berhasil diterima!')
       } catch (err: unknown) {
         setStatus('error')
-        if (err instanceof Error) {
-          setMessage(err.message)
-        } else {
-          setMessage('Gagal menerima undangan. Silakan coba lagi.')
-        }
+        setMessage(extractErrorMessage(err))
       }
     }
 
     acceptInvite()
-  }, [token])
+  }, [token, qc])
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-6">

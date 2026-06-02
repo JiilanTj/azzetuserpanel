@@ -101,7 +101,9 @@ function SubscriptionPage() {
                 onClick={() => navigate({ to: "/plans" })}
               >
                 <UpdateIcon className="h-4 w-4" />
-                Ganti Paket
+                {subscription?.status === "active" || subscription?.status === "trial"
+                  ? "Upgrade / Ganti Paket"
+                  : "Ganti Paket"}
               </Button>
             </div>
           </div>

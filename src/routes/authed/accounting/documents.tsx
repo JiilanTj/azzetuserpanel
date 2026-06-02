@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { createRoute, Link } from '@tanstack/react-router'
 import { authedLayout } from '../_authed'
 import { useWorkspaceStore } from '@/stores/workspace.store'
-import { useDocuments, useUploadDocument } from '@/hooks/use-documents'
+import { useDocuments, useUploadDocument, useDocument } from '@/hooks/use-documents'
 import {
   Button,
   Badge,
@@ -11,6 +11,11 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
 } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import type { DocumentType, DocumentExtractionStatus } from '@/lib/api/types/document.types'
@@ -60,6 +65,7 @@ function DocumentsPage() {
   const uploadMutation = useUploadDocument(activeWorkspace?.entity_id)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [docType, setDocType] = useState<DocumentType>('RECEIPT')
+  const [selectedDocId, setSelectedDocId] = useState<string | null>(null)
 
   const documents = data?.documents ?? []
 
@@ -152,7 +158,11 @@ function DocumentsPage() {
             {documents.map((doc) => (
               <div
                 key={doc.id}
-                className="flex items-center justify-between px-5 py-4 hover:bg-(--gray-2) transition-colors"
+                role="button"
+                tabIndex={0}
+                onClick={() => setSelectedDocId(doc.id)}
+                onKeyDown={(e) => e.key === 'Enter' && setSelectedDocId(doc.id)}
+                className="flex items-center justify-between px-5 py-4 hover:bg-(--gray-2) transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-4 min-w-0">
                   <div className={cn(
@@ -195,6 +205,7 @@ function DocumentsPage() {
                     <Link
                       to="/accounting/transactions/$id"
                       params={{ id: doc.transaction_id }}
+                      onClick={(e) => e.stopPropagation()}
                       className="inline-flex items-center gap-1 text-xs text-(--blue-11) hover:text-(--blue-12) font-medium"
                     >
                       Lihat Transaksi
@@ -206,6 +217,7 @@ function DocumentsPage() {
                       href={doc.view_url}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
                       className="text-xs text-(--gray-10) hover:text-(--gray-12)"
                     >
                       Preview
@@ -217,6 +229,107 @@ function DocumentsPage() {
           </div>
         )}
       </div>
+
+      <DocumentDetailDialog
+        workspaceId={activeWorkspace?.entity_id}
+        documentId={selectedDocId}
+        onClose={() => setSelectedDocId(null)}
+        docTypeLabels={DOC_TYPE_LABELS}
+        extractionLabels={EXTRACTION_LABELS}
+        extractionVariant={extractionVariant}
+        formatDate={formatDate}
+      />
     </div>
+  )
+}
+
+function DocumentDetailDialog({
+  workspaceId,
+  documentId,
+  onClose,
+  docTypeLabels,
+  extractionLabels,
+  extractionVariant,
+  formatDate,
+}: {
+  workspaceId?: string
+  documentId: string | null
+  onClose: () => void
+  docTypeLabels: Record<DocumentType, string>
+  extractionLabels: Record<DocumentExtractionStatus, string>
+  extractionVariant: (status: DocumentExtractionStatus) => 'gray' | 'warning' | 'success' | 'error'
+  formatDate: (dateStr: string) => string
+}) {
+  const { data: doc, isLoading } = useDocument(workspaceId, documentId ?? undefined)
+
+  return (
+    <Dialog open={!!documentId} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Detail Dokumen</DialogTitle>
+          <DialogDescription>
+            {doc ? `${docTypeLabels[doc.document_type]} — ${doc.file_name}` : 'Memuat...'}
+          </DialogDescription>
+        </DialogHeader>
+        {isLoading || !doc ? (
+          <div className="py-8 text-center text-(--gray-10) text-sm">Memuat detail dokumen...</div>
+        ) : (
+          <div className="space-y-4 text-sm">
+            <div className="flex items-center gap-2">
+              <Badge variant={extractionVariant(doc.extraction_status)}>
+                {extractionLabels[doc.extraction_status]}
+              </Badge>
+              <span className="text-(--gray-9)">{formatDate(doc.created_at)}</span>
+            </div>
+            <dl className="grid grid-cols-2 gap-2 text-xs">
+              <dt className="text-(--gray-9)">Ukuran</dt>
+              <dd className="text-(--gray-12)">{(doc.file_size / 1024).toFixed(1)} KB</dd>
+              <dt className="text-(--gray-9)">MIME</dt>
+              <dd className="text-(--gray-12)">{doc.mime_type}</dd>
+              <dt className="text-(--gray-9)">Verifikasi</dt>
+              <dd className="text-(--gray-12)">{doc.verification_status}</dd>
+              {doc.extraction_confidence != null && (
+                <>
+                  <dt className="text-(--gray-9)">Confidence OCR</dt>
+                  <dd className="text-(--gray-12)">{(doc.extraction_confidence * 100).toFixed(0)}%</dd>
+                </>
+              )}
+            </dl>
+            {doc.extraction_error && (
+              <p className="text-xs text-(--red-11)">{doc.extraction_error}</p>
+            )}
+            {doc.extracted_data && Object.keys(doc.extracted_data).length > 0 && (
+              <div className="rounded-lg border border-(--gray-4) bg-(--gray-2) p-3">
+                <p className="text-xs font-medium text-(--gray-11) mb-2">Data diekstrak</p>
+                <pre className="text-xs text-(--gray-11) whitespace-pre-wrap break-words max-h-40 overflow-y-auto">
+                  {JSON.stringify(doc.extracted_data, null, 2)}
+                </pre>
+              </div>
+            )}
+            <div className="flex gap-2 pt-2">
+              {doc.view_url && (
+                <a
+                  href={doc.view_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-(--blue-11) hover:underline font-medium"
+                >
+                  Buka preview
+                </a>
+              )}
+              {doc.transaction_id && (
+                <Link
+                  to="/accounting/transactions/$id"
+                  params={{ id: doc.transaction_id }}
+                  className="text-xs text-(--blue-11) hover:underline font-medium"
+                >
+                  Lihat transaksi
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }

@@ -13,7 +13,7 @@ export const documentKeys = {
 export function useDocuments(workspaceId?: string) {
   return useQuery({
     queryKey: documentKeys.list(workspaceId ?? ''),
-    queryFn: () => documentService.list(workspaceId!),
+    queryFn: () => documentService.list(),
     enabled: !!workspaceId,
     refetchInterval: (query) => {
       const docs = query.state.data?.documents
@@ -28,7 +28,7 @@ export function useDocuments(workspaceId?: string) {
 export function useDocument(workspaceId?: string, documentId?: string) {
   return useQuery({
     queryKey: documentKeys.detail(workspaceId ?? '', documentId ?? ''),
-    queryFn: () => documentService.get(workspaceId!, documentId!),
+    queryFn: () => documentService.get(documentId!),
     enabled: !!workspaceId && !!documentId,
     refetchInterval: (query) => {
       const d = query.state.data
@@ -44,7 +44,7 @@ export function useUploadDocument(workspaceId?: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: ({ file, documentType }: { file: File; documentType: DocumentType }) =>
-      documentService.uploadDocument(workspaceId!, file, documentType),
+      documentService.uploadDocument(file, documentType),
     onSuccess: () => {
       if (workspaceId) {
         qc.invalidateQueries({ queryKey: documentKeys.list(workspaceId) })

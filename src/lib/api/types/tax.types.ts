@@ -102,3 +102,17 @@ export interface TaxReportJobResponse {
   created_at: string
   completed_at?: string
 }
+
+export interface TaxDocumentRefResponse {
+  id: string
+  document_id: string
+  ref_type: string
+  file_name: string
+  document_type: string
+  created_at: string
+}
+
+export interface LinkTaxDocumentRequest {
+  document_id: string
+  ref_type: string
+}

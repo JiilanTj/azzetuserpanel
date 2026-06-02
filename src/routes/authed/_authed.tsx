@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { useWorkspaceStore } from "@/stores/workspace.store";
 import { subscriptionService } from "@/lib/api/services";
+import { HTTPError } from "@/lib/api/client";
 import type { SubscriptionResponse } from "@/lib/api/types";
 import { ExclamationTriangleIcon, Cross2Icon } from "@radix-ui/react-icons";
 
@@ -47,6 +48,8 @@ function AuthedLayout() {
 
       // No active workspace — redirect to workspace selection
       navigate({ to: "/workspaces", replace: true });
+      if (!cancelled) setInitialized(true);
+      return;
     }
 
     init();
@@ -69,10 +72,11 @@ function AuthedLayout() {
         if (sub.status === 'expired' || sub.status === 'cancelled' || sub.status === 'pending_payment') {
           navigate({ to: "/plans", replace: true });
         }
-      } catch {
+      } catch (err) {
         if (cancelled) return;
-        // No subscription found — redirect to plan selection
-        navigate({ to: "/plans", replace: true });
+        if (err instanceof HTTPError && err.response.status === 404) {
+          navigate({ to: "/plans", replace: true });
+        }
       }
     }
 
@@ -94,6 +98,10 @@ function AuthedLayout() {
     }
     return 0;
   }, [subscription, now]);
+
+  if (!activeWorkspace) {
+    return null;
+  }
 
   if (!initialized) {
     return (

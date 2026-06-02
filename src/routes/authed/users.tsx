@@ -19,9 +19,11 @@ import {
   useRoles,
   useCreateRole,
   useAssignRole,
+  useUnassignRole,
   useDeleteRole,
   useUpdateRole,
 } from "@/hooks/use-workspace";
+import type { MemberResponse } from "@/lib/api/types";
 import { useWorkspaceStore } from "@/stores/workspace.store";
 import {
   Button,
@@ -126,8 +128,9 @@ function MembersTabContent() {
   const updateMutation = useUpdateMember(activeWorkspace?.entity_id);
   const removeMutation = useRemoveMember(activeWorkspace?.entity_id);
   const assignRoleMutation = useAssignRole(activeWorkspace?.entity_id);
+  const unassignRoleMutation = useUnassignRole(activeWorkspace?.entity_id);
 
-  const [selectedMember, setSelectedMember] = useState<{ id: string; custom_alias?: string; entity_name?: string } | null>(null);
+  const [selectedMember, setSelectedMember] = useState<MemberResponse | null>(null);
   const [roleId, setRoleId] = useState<string>("");
 
   const handleToggleStatus = async (memberId: string, currentStatus: MemberStatus) => {
@@ -145,8 +148,25 @@ function MembersTabContent() {
     if (!selectedMember || !roleId) return;
     try {
       await assignRoleMutation.mutateAsync({
-        member_entity_id: selectedMember.id,
+        member_entity_id: selectedMember.entity_id,
         role_id: roleId,
+      });
+      setSelectedMember(null);
+      setRoleId("");
+    } catch {
+      // Handled in mutation
+    }
+  };
+
+  const handleUnassignRole = async () => {
+    if (!selectedMember?.role) return;
+    const currentRoleId = roles?.find((r) => r.name === selectedMember.role)?.id;
+    if (!currentRoleId) return;
+    if (!confirm(`Lepas role "${selectedMember.role}" dari anggota ini?`)) return;
+    try {
+      await unassignRoleMutation.mutateAsync({
+        member_entity_id: selectedMember.entity_id,
+        role_id: currentRoleId,
       });
       setSelectedMember(null);
       setRoleId("");
@@ -350,13 +370,26 @@ function MembersTabContent() {
               </SelectContent>
             </Select>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="ghost" onClick={() => setSelectedMember(null)}>
-                Batal
-              </Button>
-              <Button type="submit" variant="solid" loading={assignRoleMutation.isPending}>
-                Simpan
-              </Button>
+            <div className="flex justify-between gap-2 pt-2">
+              {selectedMember?.role && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-red-600 hover:text-red-700"
+                  loading={unassignRoleMutation.isPending}
+                  onClick={handleUnassignRole}
+                >
+                  Lepas Role
+                </Button>
+              )}
+              <div className="flex justify-end gap-2 ml-auto">
+                <Button type="button" variant="ghost" onClick={() => setSelectedMember(null)}>
+                  Batal
+                </Button>
+                <Button type="submit" variant="solid" loading={assignRoleMutation.isPending}>
+                  Simpan
+                </Button>
+              </div>
             </div>
           </form>
         </DialogContent>

@@ -14,7 +14,7 @@ import {
   useAddCounterparty,
   useSearchEntities,
 } from "@/hooks/use-workspace";
-import { useSetCounterpartyAlias } from "@/hooks/use-identity";
+import { useSetCounterpartyAlias, useDeleteCounterpartyAlias } from "@/hooks/use-identity";
 import { counterpartyAliasSchema, type CounterpartyAliasForm } from "@/lib/validations";
 import {
   Button,
@@ -556,6 +556,7 @@ function EditAliasDialog({
   target: { entity_id: string; entity_name: string; custom_alias?: string };
 }) {
   const setAliasMutation = useSetCounterpartyAlias(workspaceId);
+  const deleteAliasMutation = useDeleteCounterpartyAlias(workspaceId);
   const {
     register,
     handleSubmit,
@@ -578,6 +579,13 @@ function EditAliasDialog({
     onOpenChange(false);
   });
 
+  const handleDeleteAlias = async () => {
+    if (!target.custom_alias) return;
+    if (!confirm(`Hapus alias kustom untuk "${target.entity_name}"?`)) return;
+    await deleteAliasMutation.mutateAsync(target.entity_id);
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -595,13 +603,26 @@ function EditAliasDialog({
             errorMessage={errors.custom_alias?.message}
             {...register("custom_alias")}
           />
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-              Batal
-            </Button>
-            <Button type="submit" variant="solid" loading={setAliasMutation.isPending}>
-              Simpan Alias
-            </Button>
+          <div className="flex justify-between gap-2">
+            {target.custom_alias && (
+              <Button
+                type="button"
+                variant="ghost"
+                className="text-red-600 hover:text-red-700"
+                loading={deleteAliasMutation.isPending}
+                onClick={handleDeleteAlias}
+              >
+                Hapus Alias
+              </Button>
+            )}
+            <div className="flex justify-end gap-2 ml-auto">
+              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
+                Batal
+              </Button>
+              <Button type="submit" variant="solid" loading={setAliasMutation.isPending}>
+                Simpan Alias
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>

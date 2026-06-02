@@ -70,9 +70,9 @@ export const identityService = {
       .json<APIResponse<FuzzyMatchResponse[]>>()
       .then(r => r.data),
 
-  searchFuzzy: (q: string, limit = 20) =>
+  searchFuzzy: (workspaceId: string, q: string, limit = 20) =>
     apiClient
-      .get('entities/match', { searchParams: { q, limit } })
+      .get('entities/match', { searchParams: { workspace_id: workspaceId, q, limit } })
       .json<APIResponse<FuzzyMatchResponse[]>>()
       .then(r => r.data),
 

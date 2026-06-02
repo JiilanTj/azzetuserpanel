@@ -6,7 +6,8 @@ import type { APIResponse } from './shared.types'
 // -------------------------------------------------------
 
 export type UserStatus = 'ACTIVE' | 'SUSPENDED' | 'UNVERIFIED' | 'DELETED'
-export type OTPPurpose = 'login' | 'verify_whatsapp' | 'verify_email' | 'reset_password'
+export type OTPPurpose = 'login' | 'verify_whatsapp' | 'reset_password'
+export type VerifyOTPPurpose = 'verify_whatsapp' | 'verify_email'
 
 // -------------------------------------------------------
 // UserResponse — profile returned in every auth response
@@ -48,7 +49,9 @@ export interface RegisterResponse {
 export interface VerifyOTPRequest {
   identifier: string   // email or whatsapp number
   otp: string          // 6-digit code
-  purpose: Extract<OTPPurpose, 'verify_whatsapp' | 'verify_email'>
+  purpose: VerifyOTPPurpose
+  /** Required when activating an unverified account (must match registration password) */
+  password?: string
 }
 
 // -------------------------------------------------------

@@ -36,7 +36,7 @@ function VerifyWhatsappPage() {
     formState: { errors },
   } = useForm<VerifyOtpForm>({
     resolver: zodResolver(verifyOtpSchema),
-    defaultValues: { identifier: search.identifier, otp: "" },
+    defaultValues: { identifier: search.identifier, otp: "", password: "" },
   });
 
   const onSubmit = handleSubmit(async (data) => {
@@ -45,6 +45,7 @@ function VerifyWhatsappPage() {
         identifier: data.identifier,
         otp: data.otp,
         purpose: "verify_whatsapp",
+        password: data.password,
       },
       {
         onSuccess: () => {
@@ -127,6 +128,26 @@ function VerifyWhatsappPage() {
             />
             {errors.otp && (
               <p className="text-xs text-red-500">{errors.otp.message}</p>
+            )}
+          </div>
+
+          {/* Password confirmation */}
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="verify-password-input"
+              className="text-sm font-medium text-(--gray-12)"
+            >
+              Password Akun
+            </label>
+            <input
+              id="verify-password-input"
+              type="password"
+              placeholder="Password saat registrasi"
+              {...register("password")}
+              className={inputCls(!!errors.password)}
+            />
+            {errors.password && (
+              <p className="text-xs text-red-500">{errors.password.message}</p>
             )}
           </div>
 

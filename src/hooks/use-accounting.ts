@@ -43,14 +43,6 @@ export function useAccounts(workspaceId?: string, includeInactive = false) {
   })
 }
 
-export function useAccount(workspaceId?: string, id?: string) {
-  return useQuery({
-    queryKey: accountingKeys.accountDetail(workspaceId ?? '', id ?? ''),
-    queryFn: () => accountingService.getAccount(workspaceId!, id!),
-    enabled: !!workspaceId && !!id,
-  })
-}
-
 export function useCreateAccount(workspaceId?: string) {
   const qc = useQueryClient()
   return useMutation({

@@ -174,7 +174,7 @@ function NewTransactionPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit, e => { onValidationError(); console.error(e) })} className="space-y-8 bg-white dark:bg-(--gray-2) p-6 rounded-xl border border-(--gray-6)">
+      <form onSubmit={handleSubmit(onSubmit, onValidationError)} className="space-y-8 bg-white dark:bg-(--gray-2) p-6 rounded-xl border border-(--gray-6)">
         <Controller
           name="input_mode"
           control={control}

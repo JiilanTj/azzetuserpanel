@@ -3,6 +3,7 @@ import { createRoute, Link, useNavigate } from '@tanstack/react-router'
 import { authedLayout } from './_authed'
 import { useMyClaims, useCreateClaim } from '@/hooks/use-claims'
 import { useFuzzySearch } from '@/hooks/use-identity'
+import { useWorkspaceStore } from '@/stores/workspace.store'
 import {
   Button,
   Badge,
@@ -136,7 +137,8 @@ function CreateClaimDialog({
   const [selected, setSelected] = useState<FuzzyMatchResponse | null>(null)
   const [notes, setNotes] = useState('')
 
-  const { data: matches, isFetching } = useFuzzySearch(query, open)
+  const workspaceEntityId = useWorkspaceStore(s => s.activeWorkspace?.entity_id)
+  const { data: matches, isFetching } = useFuzzySearch(workspaceEntityId, query, open)
 
   const handleClose = () => {
     setQuery('')

@@ -63,7 +63,6 @@ export interface UpdateItemRequest {
   unit?: string
   unit_price?: number
   account_id?: string
-  is_active?: boolean
 }
 
 export interface JournalEntryResponse {

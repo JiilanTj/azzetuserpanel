@@ -38,7 +38,7 @@ import {
   EyeNoneIcon,
 } from '@radix-ui/react-icons'
 import type { ItemResponse, CreateItemRequest, AccountResponse } from '@/lib/api/types/accounting.types'
-import { cn } from '@/lib/utils'
+import { cn, formatUnitPrice, parseUnitPrice } from '@/lib/utils'
 
 const VALID_UNITS = ['Pcs', 'Kg', 'Liter', 'Meter', 'M2', 'M3', 'Jam', 'Hari', 'Paket', 'Unit', 'Box', 'Lusin', 'Set', 'Rim'] as const
 
@@ -156,7 +156,7 @@ function ItemsPage() {
                     </Badge>
                   </td>
                   <td className="py-2.5 px-4 text-(--gray-11)">
-                    Rp {Number(item.unit_price).toLocaleString('id-ID')}
+                    Rp {formatUnitPrice(item.unit_price)}
                   </td>
                   <td className="py-2.5 px-4 text-(--gray-11)">
                     {item.unit || '-'}
@@ -279,9 +279,8 @@ function ItemFormModal({
           name: editingItem.name,
           description: editingItem.description || '',
           unit: editingItem.unit || '',
-          unit_price: Number(editingItem.unit_price).toString(), // Remove any decimal padding if present
+          unit_price: String(parseUnitPrice(editingItem.unit_price)),
           account_id: editingItem.account_id || '__none__',
-          is_active: editingItem.is_active,
         })
       } else {
         reset({
@@ -444,30 +443,6 @@ function ItemFormModal({
               {...register('description')}
             />
           </div>
-
-          {isEditing && (
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-(--gray-12)">Status Aktif</label>
-              <Controller
-                name="is_active"
-                control={control}
-                render={({ field }) => (
-                  <Select 
-                    onValueChange={(val) => field.onChange(val === 'true')} 
-                    value={field.value ? 'true' : 'false'}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="true">Aktif</SelectItem>
-                      <SelectItem value="false">Nonaktif</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </div>
-          )}
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>

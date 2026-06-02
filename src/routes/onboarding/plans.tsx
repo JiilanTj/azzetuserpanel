@@ -1,7 +1,7 @@
 import { createRoute, useNavigate } from "@tanstack/react-router";
 import { rootRoute } from "../__root";
 import { authMiddleware } from "@/middleware/auth.middleware";
-import { usePlansWithFeatures, useSubscription, useSubscribe } from "@/hooks/use-subscription";
+import { usePlansWithFeatures, useSubscription, useSubscribe, useChangeSubscription } from "@/hooks/use-subscription";
 import { useWorkspaceStore } from "@/stores/workspace.store";
 import { Button } from "@/components/ui";
 import { CheckIcon, Cross1Icon, RocketIcon } from "@radix-ui/react-icons";
@@ -55,26 +55,33 @@ function PlansPage() {
     activeWorkspace?.entity_id,
   );
   const subscribeMutation = useSubscribe(activeWorkspace?.entity_id);
+  const changeMutation = useChangeSubscription(activeWorkspace?.entity_id);
+
+  const hasActiveSubscription =
+    subscription != null &&
+    (subscription.status === "active" ||
+      subscription.status === "trial" ||
+      subscription.status === "pending_payment");
 
   const handleSelectPlan = async (planId: string, type: "free" | "paid") => {
     if (!activeWorkspace) return;
 
-    await subscribeMutation.mutateAsync(
-      {
-        plan_id: planId,
-        billing_cycle: type === "paid" ? "monthly" : undefined,
+    const body = {
+      plan_id: planId,
+      billing_cycle: type === "paid" ? ("monthly" as const) : undefined,
+    };
+
+    const mutation = hasActiveSubscription ? changeMutation : subscribeMutation;
+
+    await mutation.mutateAsync(body, {
+      onSuccess: (data) => {
+        if (data.payment_url) {
+          window.location.href = data.payment_url;
+        } else if (data.status === "active" || data.status === "trial") {
+          navigate({ to: "/dashboard", replace: true });
+        }
       },
-      {
-        onSuccess: (data) => {
-          if (data.payment_url) {
-            // Paid plan — redirect to Xendit payment page
-            window.location.href = data.payment_url;
-          } else if (data.status === "active" || data.status === "trial") {
-            navigate({ to: "/dashboard", replace: true });
-          }
-        },
-      },
-    );
+    });
   };
 
   const isLoading = loadingPlans || loadingSub;
@@ -240,7 +247,7 @@ function PlansPage() {
               <div className="p-6 pt-0">
                 <Button
                   onClick={() => handleSelectPlan(plan.id, plan.type)}
-                  disabled={isCurrentPlan || subscribeMutation.isPending}
+                  disabled={isCurrentPlan || subscribeMutation.isPending || changeMutation.isPending}
                   variant={isCurrentPlan ? "outline" : "solid"}
                   size="3"
                   className={cn(
@@ -250,7 +257,9 @@ function PlansPage() {
                 >
                   {isCurrentPlan
                     ? "Plan Aktif Anda"
-                    : plan.is_trial
+                    : hasActiveSubscription
+                      ? "Ganti ke Plan Ini"
+                      : plan.is_trial
                       ? `Coba Gratis ${plan.trial_days} Hari`
                       : isFree
                         ? "Mulai Gratis"

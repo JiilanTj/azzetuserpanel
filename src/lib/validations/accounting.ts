@@ -43,7 +43,6 @@ export const updateItemSchema = z.object({
   unit: z.string().max(20, 'Satuan maksimal 20 karakter').optional(),
   unit_price: z.string().min(1, 'Harga satuan wajib diisi').optional(),
   account_id: z.string().optional(),
-  is_active: z.boolean().optional(),
 })
 
 export type UpdateItemFormValues = z.infer<typeof updateItemSchema>

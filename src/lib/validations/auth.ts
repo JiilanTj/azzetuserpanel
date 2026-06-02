@@ -23,6 +23,7 @@ export const verifyOtpSchema = z.object({
     .string()
     .length(6, "Kode OTP harus berisi 6 digit angka.")
     .regex(/^\d+$/, "Hanya angka."),
+  password: z.string().min(8, "Password minimal 8 karakter."),
 });
 export type VerifyOtpForm = z.infer<typeof verifyOtpSchema>;
 

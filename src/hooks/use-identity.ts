@@ -15,7 +15,7 @@ export const identityKeys = {
   legalIDs: (entityId: string) => [...identityKeys.all, 'legal-ids', entityId] as const,
   aliases: (entityId: string) => [...identityKeys.all, 'aliases', entityId] as const,
   duplicates: (entityId: string) => [...identityKeys.all, 'duplicates', entityId] as const,
-  fuzzySearch: (q: string) => [...identityKeys.all, 'fuzzy', q] as const,
+  searchFuzzy: (workspaceId: string, q: string) => [...identityKeys.all, 'fuzzy', workspaceId, q] as const,
   counterpartyAliases: (wsId: string) => [...identityKeys.all, 'cp-aliases', wsId] as const,
 }
 
@@ -112,20 +112,12 @@ export function useFindDuplicates(entityId?: string) {
   })
 }
 
-export function useFuzzySearch(q: string, enabled = true) {
+export function useFuzzySearch(workspaceId: string | undefined, q: string, enabled = true) {
   return useQuery({
-    queryKey: identityKeys.fuzzySearch(q),
-    queryFn: () => identityService.searchFuzzy(q),
-    enabled: enabled && q.trim().length >= 3,
+    queryKey: identityKeys.searchFuzzy(workspaceId ?? '', q),
+    queryFn: () => identityService.searchFuzzy(workspaceId!, q),
+    enabled: enabled && !!workspaceId && q.trim().length >= 3,
     staleTime: 5000,
-  })
-}
-
-export function useCounterpartyAliases(workspaceId?: string) {
-  return useQuery({
-    queryKey: identityKeys.counterpartyAliases(workspaceId ?? ''),
-    queryFn: () => identityService.listCounterpartyAliases(workspaceId!),
-    enabled: !!workspaceId,
   })
 }
 
@@ -142,5 +134,20 @@ export function useSetCounterpartyAlias(workspaceId?: string) {
       toast.success('Alias pihak ketiga diperbarui')
     },
     onError: (err) => toast.error('Gagal memperbarui alias', { description: extractErrorMessage(err) }),
+  })
+}
+
+export function useDeleteCounterpartyAlias(workspaceId?: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (entityId: string) => identityService.deleteCounterpartyAlias(workspaceId!, entityId),
+    onSuccess: () => {
+      if (workspaceId) {
+        qc.invalidateQueries({ queryKey: identityKeys.counterpartyAliases(workspaceId) })
+        qc.invalidateQueries({ queryKey: ['workspace', workspaceId, 'counterparties'] })
+      }
+      toast.success('Alias kustom dihapus')
+    },
+    onError: (err) => toast.error('Gagal menghapus alias', { description: extractErrorMessage(err) }),
   })
 }

@@ -92,9 +92,14 @@ export const accountingService = {
   // Transactions
   // -------------------------------------------------------
 
-  listTransactions: (_workspaceId: string) =>
+  listTransactions: (_workspaceId: string, params?: { limit?: number; offset?: number }) =>
     apiClient
-      .get('transactions')
+      .get('transactions', {
+        searchParams: {
+          ...(params?.limit != null && { limit: String(params.limit) }),
+          ...(params?.offset != null && { offset: String(params.offset) }),
+        },
+      })
       .json<APIResponse<TransactionResponse[]>>()
       .then(r => r.data),
 

@@ -38,7 +38,9 @@ export interface CreateEntityRequest {
 }
 
 export interface WorkspaceResponse {
+  /** Workspace relation row ID (not the entity UUID used for X-Workspace-ID). */
   id: string
+  /** Entity UUID — use for X-Workspace-ID header and workspace-scoped resources. */
   entity_id: string
   entity_name: string
   entity_type: EntityType
@@ -46,6 +48,11 @@ export interface WorkspaceResponse {
   subscription_status?: import('./subscription.types').SubscriptionStatus
   plan_name?: string
   created_at: string
+}
+
+/** Returns the entity UUID expected by X-Workspace-ID and workspace-scoped APIs. */
+export function getWorkspaceEntityId(ws: WorkspaceResponse): string {
+  return ws.entity_id
 }
 
 export interface CreateWorkspaceRequest {
@@ -147,7 +154,7 @@ export interface AddCounterpartyRequest {
   nama_utama?: string
   nik_npwp?: string
   nomor_wa?: string
-  relation_type?: "PELANGGAN" | "VENDOR"
+  relation_type: "PELANGGAN" | "VENDOR"
 }
 
 export interface CounterpartyResponse {

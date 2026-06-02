@@ -55,7 +55,7 @@ const routeTree = rootRoute.addChildren([
   // Protected routes — wrapped in authed layout (auth guard + sidebar/header)
   authedLayout.addChildren([
     dashboardRoute,
-    uiOverviewRoute,
+    ...(import.meta.env.DEV ? [uiOverviewRoute] : []),
     usersRoute,
     billingRoute,
     settingsRoute,

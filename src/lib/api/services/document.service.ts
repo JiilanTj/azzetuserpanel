@@ -7,34 +7,28 @@ import type {
   OCRPresignedUploadResponse,
 } from '../types/document.types'
 
-const wsHeaders = (workspaceId?: string) =>
-  workspaceId ? { 'X-Workspace-ID': workspaceId } : undefined
-
 export const documentService = {
-  list: (workspaceId: string, params?: { limit?: number; offset?: number }) =>
+  list: (params?: { limit?: number; offset?: number }) =>
     apiClient
-      .get('documents', {
-        headers: wsHeaders(workspaceId),
-        searchParams: params,
-      })
+      .get('documents', { searchParams: params })
       .json<APIResponse<DocumentListResponse>>()
       .then(r => r.data),
 
-  get: (workspaceId: string, documentId: string) =>
+  get: (documentId: string) =>
     apiClient
-      .get(`documents/${documentId}`, { headers: wsHeaders(workspaceId) })
+      .get(`documents/${documentId}`)
       .json<APIResponse<DocumentResponse>>()
       .then(r => r.data),
 
-  requestUpload: (workspaceId: string, body: OCRUploadRequest) =>
+  requestUpload: (body: OCRUploadRequest) =>
     apiClient
-      .post('documents', { json: body, headers: wsHeaders(workspaceId) })
+      .post('documents', { json: body })
       .json<APIResponse<OCRPresignedUploadResponse>>()
       .then(r => r.data),
 
-  confirmUpload: (workspaceId: string, documentId: string) =>
+  confirmUpload: (documentId: string) =>
     apiClient
-      .post(`documents/${documentId}/confirm`, { headers: wsHeaders(workspaceId) })
+      .post(`documents/${documentId}/confirm`)
       .json<APIResponse<DocumentResponse>>()
       .then(r => r.data),
 
@@ -50,14 +44,14 @@ export const documentService = {
   },
 
   /** Full upload flow: presign → PUT → confirm */
-  uploadDocument: async (workspaceId: string, file: File, documentType: OCRUploadRequest['document_type']) => {
-    const presigned = await documentService.requestUpload(workspaceId, {
+  uploadDocument: async (file: File, documentType: OCRUploadRequest['document_type']) => {
+    const presigned = await documentService.requestUpload({
       document_type: documentType,
       file_name: file.name,
       mime_type: file.type || 'application/octet-stream',
       file_size: file.size,
     })
     await documentService.uploadToPresignedUrl(presigned.upload_url, file)
-    return documentService.confirmUpload(workspaceId, presigned.document_id)
+    return documentService.confirmUpload(presigned.document_id)
   },
 }

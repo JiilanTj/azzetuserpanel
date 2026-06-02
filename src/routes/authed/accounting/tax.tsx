@@ -1,15 +1,41 @@
 import { useState } from 'react'
-import { createRoute } from '@tanstack/react-router'
+import { createRoute, Link } from '@tanstack/react-router'
 import { authedLayout } from '../_authed'
+import { useWorkspaceStore } from '@/stores/workspace.store'
+import { useDocuments } from '@/hooks/use-documents'
 import {
   useTaxProfile,
   useUpdateTaxProfile,
   useTaxCalculations,
+  useTaxCalculation,
+  useTaxCalculationDocuments,
+  useLinkTaxDocument,
   usePPNSummary,
+  usePPhSummary,
   useRequestTaxReport,
   useTaxReportJobs,
+  useTaxReportJob,
 } from '@/hooks/use-tax'
-import { Button, Input, Label, Switch, Tabs, TabsList, TabsTrigger, Badge } from '@/components/ui'
+import {
+  Button,
+  Input,
+  Label,
+  Switch,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  Badge,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui'
 import { cn } from '@/lib/utils'
 import type { TaxStatus } from '@/lib/api/types/tax.types'
 
@@ -39,16 +65,28 @@ function formatIDR(val: string | number) {
   return Number(val).toLocaleString('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 })
 }
 
+const TAX_DOC_REF_TYPES = [
+  { value: 'FAKTUR_PAJAK', label: 'Faktur Pajak' },
+  { value: 'BUKTI_POTONG', label: 'Bukti Potong' },
+  { value: 'INVOICE', label: 'Invoice' },
+  { value: 'OTHER', label: 'Lainnya' },
+] as const
+
 function TaxPage() {
+  const { activeWorkspace } = useWorkspaceStore()
   const [tab, setTab] = useState('summary')
   const [period, setPeriod] = useState(DEFAULT_PERIOD)
+  const [selectedCalcId, setSelectedCalcId] = useState<string | null>(null)
+  const [selectedReportJobId, setSelectedReportJobId] = useState<string | null>(null)
 
   const { data: profile, isLoading: profileLoading } = useTaxProfile()
   const updateProfile = useUpdateTaxProfile()
   const { data: ppnSummary, isLoading: ppnLoading } = usePPNSummary(period)
+  const { data: pphSummary, isLoading: pphLoading } = usePPhSummary(period, period)
   const { data: calculations, isLoading: calcLoading } = useTaxCalculations(period)
   const requestReport = useRequestTaxReport()
   const { data: reportJobs } = useTaxReportJobs()
+  const { data: selectedReportJob } = useTaxReportJob(selectedReportJobId ?? undefined)
 
   const [form, setForm] = useState<{
     npwp: string
@@ -114,6 +152,7 @@ function TaxPage() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="summary">Ringkasan PPN</TabsTrigger>
+          <TabsTrigger value="pph">Ringkasan PPh</TabsTrigger>
           <TabsTrigger value="calculations">Perhitungan</TabsTrigger>
           <TabsTrigger value="profile">Profil Pajak</TabsTrigger>
           <TabsTrigger value="reports">Laporan</TabsTrigger>
@@ -141,6 +180,43 @@ function TaxPage() {
         </div>
       )}
 
+      {tab === 'pph' && (
+        <div className="rounded-2xl border border-(--gray-4) bg-surface overflow-hidden">
+          {pphLoading ? (
+            <div className="py-16 text-center text-(--gray-10)">Memuat ringkasan PPh...</div>
+          ) : !pphSummary || pphSummary.rows.length === 0 ? (
+            <div className="py-16 text-center text-(--gray-10)">Belum ada perhitungan PPh untuk periode ini.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-(--gray-4) bg-(--gray-2) text-left text-xs text-(--gray-9)">
+                    <th className="px-4 py-3 font-medium">Jenis Pajak</th>
+                    <th className="px-4 py-3 font-medium">Arah</th>
+                    <th className="px-4 py-3 font-medium text-right">DPP</th>
+                    <th className="px-4 py-3 font-medium text-right">PPh</th>
+                    <th className="px-4 py-3 font-medium text-right">Jumlah</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-(--gray-3)">
+                  {pphSummary.rows.map((row, idx) => (
+                    <tr key={`${row.tax_type}-${row.direction}-${idx}`} className="hover:bg-(--gray-1)">
+                      <td className="px-4 py-3">
+                        <Badge variant="soft">{TAX_TYPE_LABELS[row.tax_type] ?? row.tax_type}</Badge>
+                      </td>
+                      <td className="px-4 py-3 text-(--gray-11) capitalize">{row.direction.toLowerCase()}</td>
+                      <td className="px-4 py-3 text-right font-mono text-(--gray-11)">{formatIDR(row.total_base)}</td>
+                      <td className="px-4 py-3 text-right font-mono font-medium text-(--gray-12)">{formatIDR(row.total_tax)}</td>
+                      <td className="px-4 py-3 text-right text-(--gray-9)">{row.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       {tab === 'calculations' && (
         <div className="rounded-2xl border border-(--gray-4) bg-surface overflow-hidden">
           {calcLoading ? (
@@ -161,7 +237,11 @@ function TaxPage() {
                 </thead>
                 <tbody className="divide-y divide-(--gray-3)">
                   {calculations.map((c) => (
-                    <tr key={c.id} className="hover:bg-(--gray-1)">
+                    <tr
+                      key={c.id}
+                      className="hover:bg-(--gray-1) cursor-pointer"
+                      onClick={() => setSelectedCalcId(c.id)}
+                    >
                       <td className="px-4 py-3">
                         <p className="font-medium text-(--gray-12)">{c.transaction_number}</p>
                         <p className="text-xs text-(--gray-9) truncate max-w-[200px]">{c.transaction_description}</p>
@@ -267,7 +347,17 @@ function TaxPage() {
               <div className="py-12 text-center text-(--gray-10) text-sm">Belum ada laporan.</div>
             ) : (
               reportJobs.map((job) => (
-                <div key={job.id} className="px-5 py-4 flex items-center justify-between gap-4">
+                <div
+                  key={job.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedReportJobId(job.id)}
+                  onKeyDown={(e) => e.key === 'Enter' && setSelectedReportJobId(job.id)}
+                  className={cn(
+                    'px-5 py-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-(--gray-1)',
+                    selectedReportJobId === job.id && 'bg-(--blue-2)',
+                  )}
+                >
                   <div>
                     <p className="text-sm font-medium text-(--gray-12)">{job.report_type.replace(/_/g, ' ')}</p>
                     <p className="text-xs text-(--gray-9)">{job.period_from} — {job.period_to}</p>
@@ -279,9 +369,162 @@ function TaxPage() {
               ))
             )}
           </div>
+          {selectedReportJob && (
+            <div className="rounded-xl border border-(--gray-4) bg-(--gray-2) p-4 text-sm space-y-2">
+              <p className="font-medium text-(--gray-12)">Detail job laporan</p>
+              <p className="text-xs text-(--gray-10)">
+                Status: <Badge variant={selectedReportJob.status === 'COMPLETED' ? 'success' : selectedReportJob.status === 'FAILED' ? 'error' : 'warning'}>
+                  {selectedReportJob.status}
+                </Badge>
+              </p>
+              {selectedReportJob.error_message && (
+                <p className="text-xs text-(--red-11)">{selectedReportJob.error_message}</p>
+              )}
+              {selectedReportJob.result != null && (
+                <pre className="text-xs text-(--gray-11) whitespace-pre-wrap break-words max-h-48 overflow-y-auto rounded-lg bg-surface p-3 border border-(--gray-4)">
+                  {JSON.stringify(selectedReportJob.result, null, 2)}
+                </pre>
+              )}
+            </div>
+          )}
         </div>
       )}
+
+      <TaxCalculationDetailDialog
+        calculationId={selectedCalcId}
+        workspaceId={activeWorkspace?.entity_id}
+        onClose={() => setSelectedCalcId(null)}
+        taxTypeLabels={TAX_TYPE_LABELS}
+        formatIDR={formatIDR}
+      />
     </div>
+  )
+}
+
+function TaxCalculationDetailDialog({
+  calculationId,
+  workspaceId,
+  onClose,
+  taxTypeLabels,
+  formatIDR,
+}: {
+  calculationId: string | null
+  workspaceId?: string
+  onClose: () => void
+  taxTypeLabels: Record<string, string>
+  formatIDR: (val: string | number) => string
+}) {
+  const { data: calc, isLoading: calcLoading } = useTaxCalculation(calculationId ?? undefined)
+  const { data: docRefs, isLoading: docsLoading } = useTaxCalculationDocuments(calculationId ?? undefined)
+  const { data: documentsData } = useDocuments(workspaceId)
+  const linkDoc = useLinkTaxDocument(calculationId ?? undefined)
+  const [documentId, setDocumentId] = useState('')
+  const [refType, setRefType] = useState<string>('FAKTUR_PAJAK')
+
+  const availableDocs = documentsData?.documents?.filter(
+    d => d.extraction_status === 'COMPLETED' && !docRefs?.some(r => r.document_id === d.id),
+  ) ?? []
+
+  const handleLink = () => {
+    if (!documentId) return
+    linkDoc.mutate(
+      { document_id: documentId, ref_type: refType },
+      { onSuccess: () => setDocumentId('') },
+    )
+  }
+
+  return (
+    <Dialog open={!!calculationId} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Detail Perhitungan Pajak</DialogTitle>
+          <DialogDescription>
+            {calc ? `${taxTypeLabels[calc.tax_type] ?? calc.tax_type} — ${calc.transaction_number ?? calc.transaction_id}` : 'Memuat...'}
+          </DialogDescription>
+        </DialogHeader>
+        {calcLoading || !calc ? (
+          <div className="py-8 text-center text-(--gray-10) text-sm">Memuat detail...</div>
+        ) : (
+          <div className="space-y-4 text-sm">
+            <dl className="grid grid-cols-2 gap-2 text-xs">
+              <dt className="text-(--gray-9)">DPP</dt>
+              <dd className="font-mono text-(--gray-12)">{formatIDR(calc.base_amount)}</dd>
+              <dt className="text-(--gray-9)">Pajak ({calc.tax_rate * 100}%)</dt>
+              <dd className="font-mono font-medium text-(--gray-12)">{formatIDR(calc.tax_amount)}</dd>
+              <dt className="text-(--gray-9)">Periode</dt>
+              <dd>{calc.period}</dd>
+              <dt className="text-(--gray-9)">Status</dt>
+              <dd>{calc.status}</dd>
+              {calc.faktur_number && (
+                <>
+                  <dt className="text-(--gray-9)">No. Faktur</dt>
+                  <dd>{calc.faktur_number}</dd>
+                </>
+              )}
+            </dl>
+            {calc.transaction_id && (
+              <Link
+                to="/accounting/transactions/$id"
+                params={{ id: calc.transaction_id }}
+                className="text-xs text-(--blue-11) hover:underline font-medium"
+              >
+                Lihat transaksi
+              </Link>
+            )}
+
+            <div className="border-t border-(--gray-4) pt-4 space-y-3">
+              <p className="text-xs font-semibold text-(--gray-11) uppercase tracking-wide">Dokumen tertaut</p>
+              {docsLoading ? (
+                <p className="text-xs text-(--gray-9)">Memuat dokumen...</p>
+              ) : !docRefs || docRefs.length === 0 ? (
+                <p className="text-xs text-(--gray-9)">Belum ada dokumen tertaut.</p>
+              ) : (
+                <ul className="space-y-1">
+                  {docRefs.map((ref) => (
+                    <li key={ref.id} className="text-xs text-(--gray-11) flex justify-between gap-2">
+                      <span>{ref.file_name} ({ref.ref_type})</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="flex flex-col gap-2 pt-1">
+                <p className="text-xs text-(--gray-10)">Tautkan dokumen workspace</p>
+                <Select value={documentId} onValueChange={setDocumentId}>
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue placeholder="Pilih dokumen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableDocs.map((d) => (
+                      <SelectItem key={d.id} value={d.id}>{d.file_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={refType} onValueChange={setRefType}>
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TAX_DOC_REF_TYPES.map((t) => (
+                      <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="soft"
+                  size="2"
+                  loading={linkDoc.isPending}
+                  disabled={!documentId}
+                  onClick={handleLink}
+                >
+                  Tautkan Dokumen
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }
 

@@ -11,10 +11,9 @@ import {
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
   ArchiveIcon,
-  ReaderIcon,
-  ChatBubbleIcon,
   CaretSortIcon,
   CheckCircledIcon,
+  TokensIcon,
 } from '@radix-ui/react-icons'
 import { useAuthStore } from '@/stores/auth.store'
 import { useWorkspaceStore } from '@/stores/workspace.store'
@@ -36,7 +35,8 @@ import {
 // -------------------------------------------------------
 
 interface NavItem {
-  to: string
+  to?: string
+  groupKey?: string
   label: string
   Icon: React.ComponentType<{ className?: string }>
   badge?: string
@@ -46,7 +46,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'Dashboard', Icon: DashboardIcon },
   {
-    to: '/accounting',
+    groupKey: 'accounting',
     label: 'Akuntansi',
     Icon: CardStackIcon,
     children: [
@@ -62,13 +62,11 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/claims', label: 'Klaim Entitas', Icon: CheckCircledIcon },
   { to: '/users', label: 'Anggota Tim', Icon: PersonIcon },
   { to: '/subscription', label: 'Langganan', Icon: LayersIcon },
+  { to: '/billing', label: 'Tagihan', Icon: TokensIcon },
   { to: '/settings', label: 'Pengaturan', Icon: GearIcon },
 ]
 
-const BOTTOM_ITEMS: NavItem[] = [
-  { to: '/docs', label: 'Dokumentasi', Icon: ReaderIcon },
-  { to: '/support', label: 'Bantuan', Icon: ChatBubbleIcon },
-]
+const BOTTOM_ITEMS: NavItem[] = []
 
 // -------------------------------------------------------
 // Sidebar
@@ -96,16 +94,18 @@ export function Sidebar() {
   const isActive = (to: string) => currentPath === to || currentPath.startsWith(to + '/')
 
   const renderNavItem = (item: NavItem) => {
-    const active = isActive(item.to)
+    const navKey = item.groupKey ?? item.to ?? item.label
+    const groupActive = item.children?.some(child => isActive(child.to)) ?? false
+    const active = item.to ? isActive(item.to) : groupActive
     const hasChildren = item.children && item.children.length > 0
-    const isExpanded = expandedGroups[item.to] || active
+    const isExpanded = expandedGroups[navKey] || groupActive
 
     return (
-      <div key={item.to}>
+      <div key={navKey}>
         {/* Main item */}
         {hasChildren ? (
           <button
-            onClick={() => toggleGroup(item.to)}
+            onClick={() => toggleGroup(navKey)}
             className={cn(
               'relative flex items-center gap-3 w-full rounded-lg text-[13px] font-medium cursor-pointer',
               'transition-all duration-150',
@@ -131,7 +131,7 @@ export function Sidebar() {
               </>
             )}
           </button>
-        ) : (
+        ) : item.to ? (
           <Link
             to={item.to}
             className={cn(
@@ -158,7 +158,7 @@ export function Sidebar() {
               </>
             )}
           </Link>
-        )}
+        ) : null}
 
         {/* Sub-items */}
         {hasChildren && isExpanded && !collapsed && (
@@ -285,6 +285,7 @@ export function Sidebar() {
       <div className={cn('flex flex-col gap-0.5 border-t border-[#f0f0f0] dark:border-[#2a2a2a]', collapsed ? 'px-2 py-3' : 'px-3 py-3')}>
         {/* Bottom nav items */}
         {!collapsed && BOTTOM_ITEMS.map(item => {
+          if (!item.to) return null
           const active = isActive(item.to)
           return (
             <Link
