@@ -76,12 +76,6 @@ export const identityService = {
       .json<APIResponse<FuzzyMatchResponse[]>>()
       .then(r => r.data),
 
-  listCounterpartyAliases: (workspaceId: string) =>
-    apiClient
-      .get('workspaces/counterparties/aliases', { headers: wsHeaders(workspaceId) })
-      .json<APIResponse<CounterpartyAliasResponse[]>>()
-      .then(r => r.data),
-
   setCounterpartyAlias: (workspaceId: string, body: SetCounterpartyAliasRequest) =>
     apiClient
       .post('workspaces/counterparties/aliases', { json: body, headers: wsHeaders(workspaceId) })

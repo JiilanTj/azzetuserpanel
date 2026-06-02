@@ -30,12 +30,6 @@ export const accountingService = {
       .json<APIResponse<AccountResponse[]>>()
       .then(r => r.data),
 
-  getAccount: (_workspaceId: string, id: string) =>
-    apiClient
-      .get(`accounts/${id}`)
-      .json<APIResponse<AccountResponse>>()
-      .then(r => r.data),
-
   createAccount: (_workspaceId: string, body: CreateAccountRequest) =>
     apiClient
       .post('accounts', { json: body })
@@ -56,12 +50,6 @@ export const accountingService = {
     apiClient
       .get('items', { searchParams: params })
       .json<APIResponse<ItemResponse[]>>()
-      .then(r => r.data),
-
-  getItem: (_workspaceId: string, id: string) =>
-    apiClient
-      .get(`items/${id}`)
-      .json<APIResponse<ItemResponse>>()
       .then(r => r.data),
 
   createItem: (_workspaceId: string, body: CreateItemRequest) =>

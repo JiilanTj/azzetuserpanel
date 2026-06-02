@@ -21,7 +21,7 @@ export const accountingKeys = {
   accountDetail: (workspaceId: string, id: string) => [...accountingKeys.accounts(workspaceId), id] as const,
   items: (workspaceId: string) => [...accountingKeys.all, workspaceId, 'items'] as const,
   itemDetail: (workspaceId: string, id: string) => [...accountingKeys.items(workspaceId), id] as const,
-  transactions: (workspaceId: string) => [...accountingKeys.all, workspaceId, 'transactions'] as const,
+  transactions: (workspaceId: string, page?: number) => [...accountingKeys.all, workspaceId, 'transactions', page ?? 1] as const,
   transactionDetail: (workspaceId: string, id: string) => [...accountingKeys.transactions(workspaceId), id] as const,
   reports: (workspaceId: string) => [...accountingKeys.all, workspaceId, 'reports'] as const,
   trialBalance: (workspaceId: string, periodFrom: string, periodTo: string) => [...accountingKeys.reports(workspaceId), 'trial-balance', periodFrom, periodTo] as const,
@@ -159,10 +159,16 @@ export function useReactivateItem(workspaceId?: string) {
 // Transactions
 // -------------------------------------------------------
 
-export function useTransactions(workspaceId?: string) {
+export const TRANSACTIONS_PAGE_SIZE = 20
+
+export function useTransactions(workspaceId?: string, page = 1) {
   return useQuery({
-    queryKey: accountingKeys.transactions(workspaceId ?? ''),
-    queryFn: () => accountingService.listTransactions(workspaceId!),
+    queryKey: accountingKeys.transactions(workspaceId ?? '', page),
+    queryFn: () =>
+      accountingService.listTransactions(workspaceId!, {
+        limit: TRANSACTIONS_PAGE_SIZE,
+        offset: (page - 1) * TRANSACTIONS_PAGE_SIZE,
+      }),
     enabled: !!workspaceId,
   })
 }

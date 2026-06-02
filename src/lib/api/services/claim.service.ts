@@ -8,7 +8,6 @@ import type {
   DocumentUploadRequest,
   PresignedUploadResponse,
   DisputeClaimRequest,
-  ClaimDocumentResponse,
 } from '../types/claim.types'
 
 export const claimService = {
@@ -52,12 +51,6 @@ export const claimService = {
     apiClient
       .post(`claims/${claimId}/documents/${documentId}/confirm`)
       .json<APIResponse<{ status: string }>>()
-      .then(r => r.data),
-
-  listClaimDocuments: (claimId: string) =>
-    apiClient
-      .get(`claims/${claimId}/documents`)
-      .json<APIResponse<ClaimDocumentResponse[]>>()
       .then(r => r.data),
 
   /** Upload file to R2 presigned URL (direct, no auth header needed). */

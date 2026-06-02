@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { createRoute, Link } from '@tanstack/react-router'
 import { authedLayout } from '../_authed'
 import { useWorkspaceStore } from '@/stores/workspace.store'
-import { useTransactions, useVoidTransaction } from '@/hooks/use-accounting'
+import { useTransactions, useVoidTransaction, TRANSACTIONS_PAGE_SIZE } from '@/hooks/use-accounting'
 import {
   Button,
   Badge,
@@ -25,12 +25,14 @@ export const transactionsRoute = createRoute({
 
 function TransactionsPage() {
   const { activeWorkspace } = useWorkspaceStore()
-  const { data: transactionsData, isLoading } = useTransactions(activeWorkspace?.entity_id)
+  const [page, setPage] = useState(1)
+  const { data: transactionsData, isLoading } = useTransactions(activeWorkspace?.entity_id, page)
   const voidMutation = useVoidTransaction(activeWorkspace?.entity_id)
 
   const [activeTab, setActiveTab] = useState<'ALL' | 'IN' | 'OUT' | 'JOURNAL'>('ALL')
 
   const transactions = transactionsData || []
+  const hasMore = transactions.length === TRANSACTIONS_PAGE_SIZE
   
   const filteredTransactions = transactions.filter((t: TransactionResponse) => {
     if (activeTab === 'ALL') return true
@@ -88,7 +90,7 @@ function TransactionsPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'ALL' | 'IN' | 'OUT' | 'JOURNAL')} className="w-full">
+      <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val as 'ALL' | 'IN' | 'OUT' | 'JOURNAL'); setPage(1) }} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="ALL">Semua</TabsTrigger>
           <TabsTrigger value="IN">Pemasukan</TabsTrigger>
@@ -181,6 +183,27 @@ function TransactionsPage() {
             )}
           </tbody>
         </table>
+        {(page > 1 || hasMore) && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-(--gray-6) bg-(--gray-1)">
+            <Button
+              variant="ghost"
+              size="2"
+              disabled={page <= 1}
+              onClick={() => setPage(p => p - 1)}
+            >
+              Sebelumnya
+            </Button>
+            <span className="text-xs text-(--gray-10)">Halaman {page}</span>
+            <Button
+              variant="ghost"
+              size="2"
+              disabled={!hasMore}
+              onClick={() => setPage(p => p + 1)}
+            >
+              Selanjutnya
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   )
