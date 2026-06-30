@@ -27,6 +27,16 @@ export const verifyOtpSchema = z.object({
 });
 export type VerifyOtpForm = z.infer<typeof verifyOtpSchema>;
 
+// login.tsx — WhatsApp OTP login only needs the 6-digit code (the number is
+// kept in component state, and no password is set during login).
+export const loginOtpSchema = z.object({
+  otp: z
+    .string()
+    .length(6, "Kode OTP harus berisi 6 digit angka.")
+    .regex(/^\d+$/, "Hanya angka."),
+});
+export type LoginOtpForm = z.infer<typeof loginOtpSchema>;
+
 // register.tsx
 export const registerSchema = z.object({
   name: z.string().min(2, "Nama harus berisi minimal 2 karakter."),

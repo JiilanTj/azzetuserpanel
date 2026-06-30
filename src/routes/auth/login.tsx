@@ -4,10 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   loginEmailSchema,
   requestOtpSchema,
-  verifyOtpSchema,
+  loginOtpSchema,
   type LoginEmailForm,
   type RequestOtpForm,
-  type VerifyOtpForm,
+  type LoginOtpForm,
 } from "@/lib/validations";
 import { createRoute, useNavigate, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
@@ -159,8 +159,8 @@ function LoginPage() {
     handleSubmit: handleVerifyOtpSubmit,
     formState: { errors: oe },
     reset: resetVerifyOtp,
-  } = useForm<VerifyOtpForm>({
-    resolver: zodResolver(verifyOtpSchema),
+  } = useForm<LoginOtpForm>({
+    resolver: zodResolver(loginOtpSchema),
     defaultValues: { otp: "" },
   });
 
